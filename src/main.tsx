@@ -9,7 +9,7 @@ import "./index.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename="/whatsapp-auto-send">
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/privacy" element={<Privacy />} />
