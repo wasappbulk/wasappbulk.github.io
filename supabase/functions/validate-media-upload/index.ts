@@ -28,17 +28,20 @@ function checkRateLimit(userId: string): { allowed: boolean; remaining: number }
 
 // ─── CORS ─────────────────────────────────────────────────────────────────────
 function getCorsHeaders(requestOrigin: string | null): Record<string, string> {
+  // Allow Chrome extensions and standard origins
+  const isChromeExtension = requestOrigin?.startsWith('chrome-extension://');
   const allowedOrigins = [
     'http://localhost:3000',
     'http://localhost:5000',
     'https://isfaiawbywrtwvinkizb.supabase.co',
-    // Add your production domain here
   ];
 
-  const origin = (requestOrigin && allowedOrigins.includes(requestOrigin)) ? requestOrigin : 'null';
+  const origin = (isChromeExtension || (requestOrigin && allowedOrigins.includes(requestOrigin)))
+    ? requestOrigin
+    : '*';
 
   return {
-    'Access-Control-Allow-Origin': origin,
+    'Access-Control-Allow-Origin': origin!,
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Max-Age': '86400',
@@ -280,7 +283,8 @@ serve(async (req) => {
       return jsonResponse({
         success: false,
         error: 'Failed to generate upload URL',
-      }, 500);
+        details: urlError?.message ?? 'Storage bucket may not exist or is misconfigured',
+      }, 500, cors);
     }
 
     // Log the validation attempt
