@@ -91,41 +91,21 @@ class MediaManager {
    */
   async validateUpload(file) {
     try {
-      // Client-side validation first
+      // Client-side validation only
       const validation = this.validateFile(file);
       if (!validation.valid) {
         throw { ...validation };
       }
 
-      // Server-side validation and signed URL generation
-      const response = await fetch(
-        `${this.supabaseUrl}${this.FUNCTIONS.VALIDATE}`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${this.jwtToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            fileName: file.name,
-            fileSize: file.size,
-            fileType: file.type,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw {
-          valid: false,
-          error: error.error,
-          code: error.code,
-        };
-      }
-
+      // Return local validation success (no server-side upload to storage)
       return {
         valid: true,
-        data: await response.json(),
+        data: {
+          uploadUrl: null,  // No storage - send directly
+          storagePath: null,
+          fileId: crypto.randomUUID(),
+          quotaStatus: null,
+        },
       };
     } catch (error) {
       console.error('Validate upload error:', error);
@@ -274,7 +254,7 @@ class MediaManager {
    */
   async uploadMedia(file, onProgress) {
     try {
-      // Step 1: Validate and get signed URL
+      // Step 1: Validate
       const validation = await this.validateUpload(file);
       if (!validation.valid) {
         throw validation;
@@ -282,10 +262,24 @@ class MediaManager {
 
       const { uploadUrl, storagePath, fileId, quotaStatus } = validation.data;
 
-      // Step 2: Upload file to Storage
-      await this.uploadToStorage(file, uploadUrl, onProgress);
+      // Direct send mode (no storage) — return file ready for WhatsApp
+      if (!uploadUrl) {
+        return {
+          success: true,
+          mediaId: fileId,
+          mediaData: {
+            id: fileId,
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            data: file,  // Raw file object for direct send
+          },
+          quotaStatus: null,
+        };
+      }
 
-      // Step 3: Process upload (metadata, encryption, analytics)
+      // Storage mode (if enabled) — upload to Supabase
+      await this.uploadToStorage(file, uploadUrl, onProgress);
       const processed = await this.processUpload(
         { storagePath, fileId },
         file
