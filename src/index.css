@@ -4,23 +4,24 @@
 
 @layer base {
   :root {
-    --background: 0 0% 4%;
-    --foreground: 0 0% 100%;
-    --primary: 187 100% 50%;
-    --primary-foreground: 0 0% 4%;
-    --secondary: 0 0% 10%;
-    --secondary-foreground: 0 0% 100%;
-    --muted: 0 0% 10%;
-    --muted-foreground: 0 0% 70%;
-    --accent: 0 0% 16%;
-    --accent-foreground: 0 0% 100%;
-    --border: 0 0% 16%;
-    --card: 0 0% 7%;
-    --card-foreground: 0 0% 100%;
-    --destructive: 0 84% 60%;
+    /* === Matches Extension popup.css + Super Admin dark theme === */
+    --background: 220 28% 7%;        /* #0D1117 — extension bg-base */
+    --foreground: 210 20% 98%;       /* #F9FAFB — text-primary */
+    --primary: 142 70% 49%;          /* #25D366 — WhatsApp green */
+    --primary-foreground: 0 0% 4%;   /* black text on green buttons */
+    --secondary: 221 39% 11%;        /* #111827 — bg-input */
+    --secondary-foreground: 210 20% 98%;
+    --muted: 221 39% 11%;            /* #111827 */
+    --muted-foreground: 220 9% 46%;  /* #6B7280 — text-muted */
+    --accent: 215 28% 17%;           /* #1F2937 — bg-card */
+    --accent-foreground: 210 20% 98%;
+    --border: 215 19% 27%;           /* #374151 — border */
+    --card: 215 28% 17%;             /* #1F2937 — bg-card */
+    --card-foreground: 210 20% 98%;
+    --destructive: 0 84% 60%;        /* #EF4444 — error */
     --destructive-foreground: 0 0% 100%;
-    --cyan-glow: 187 100% 50%;
-    --orange: 18 100% 60%;
+    --cyan-glow: 142 70% 49%;        /* repurposed — now green glow */
+    --orange: 38 92% 50%;            /* #F59E0B — warning */
     --radius: 4px;
   }
 }
@@ -35,11 +36,11 @@
 
 @layer utilities {
   .gradient-cta {
-    background: linear-gradient(135deg, hsl(var(--primary)), hsl(187 100% 40%));
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(174 76% 29%));
   }
   .text-gradient {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(var(--primary)), hsl(187 80% 70%));
+    background-image: linear-gradient(135deg, hsl(var(--primary)), hsl(142 50% 70%));
   }
   .glow-cyan {
     box-shadow: 0 0 30px hsl(var(--primary) / 0.3);
