@@ -31,6 +31,9 @@ build/
 *.suo
 *.user
 
+# Extension config (contains API keys — never commit)
+whatsapp-bulk-sender/config.js
+
 # Competitor extension files (not your source code)
 heogilejknffekkbjdjmoamaehdblmnc/
 pggchepbleikpkhffahfabfeodghbafd/

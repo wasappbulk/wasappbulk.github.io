@@ -1,6 +1,7 @@
 // ===== Config =====
-const SUPABASE_URL = 'https://isfaiawbywrtwvinkizb.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlzZmFpYXdieXdydHd2aW5raXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyMzIyMTQsImV4cCI6MjA4NjgwODIxNH0.DkuRC5vRmuXlds-z1TvTHj2pQsoFSsqPEINOlnaN2n0'; // Replace with key from Supabase Dashboard → Project Settings → API
+importScripts('config.js');
+const SUPABASE_URL = SUPABASE_CONFIG.URL;
+const SUPABASE_ANON_KEY = SUPABASE_CONFIG.ANON_KEY;
 
 // ===== Queue State =====
 let queue = [];
