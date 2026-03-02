@@ -267,12 +267,11 @@ class MediaManager {
         return {
           success: true,
           mediaId: fileId,
-          mediaData: {
-            id: fileId,
-            name: file.name,
-            type: file.type,
-            size: file.size,
-            data: file,  // Raw file object for direct send
+          mediaRecord: {
+            fileName: file.name,
+            fileSize: file.size,
+            fileType: file.type,
+            fileData: file,
           },
           quotaStatus: null,
         };
