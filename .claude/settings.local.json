@@ -36,7 +36,9 @@
       "Bash(where supabase:*)",
       "Bash(npx supabase:*)",
       "Bash(git ls-tree:*)",
-      "Bash(git:*)"
+      "Bash(git:*)",
+      "WebFetch(domain:wasappbulk.github.io)",
+      "Bash(npm run:*)"
     ]
   }
 }
