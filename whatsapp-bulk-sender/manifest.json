@@ -1,13 +1,12 @@
 {
   "manifest_version": 3,
   "name": "WhatsApp Bulk Sender",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Send messages to multiple WhatsApp numbers without saving contacts. 100% local, no data collection.",
 
   "permissions": [
     "tabs",
     "storage",
-    "scripting",
     "activeTab",
     "alarms"
   ],
