@@ -2,18 +2,17 @@
   "manifest_version": 3,
   "name": "WhatsApp Bulk Sender",
   "version": "1.0.1",
-  "description": "Send messages to multiple WhatsApp numbers without saving contacts. 100% local, no data collection.",
+  "description": "Send bulk WhatsApp messages to multiple contacts without saving them. Account required. See privacy policy for data handling.",
 
   "permissions": [
     "tabs",
     "storage",
-    "activeTab",
     "alarms"
   ],
 
   "host_permissions": [
     "https://web.whatsapp.com/*",
-    "*://*.supabase.co/*"
+    "https://isfaiawbywrtwvinkizb.supabase.co/*"
   ],
 
   "background": {
