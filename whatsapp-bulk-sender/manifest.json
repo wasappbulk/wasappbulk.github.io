@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "WhatsApp Bulk Sender",
+  "name": "WasappBulk",
   "version": "1.0.2",
   "description": "Send bulk WhatsApp messages to multiple contacts without saving them. Account required. See privacy policy for data handling.",
 
@@ -26,7 +26,7 @@
       "48": "icons/icon48.png",
       "128": "icons/icon128.png"
     },
-    "default_title": "WhatsApp Bulk Sender"
+    "default_title": "WasappBulk"
   },
 
   "content_scripts": [
