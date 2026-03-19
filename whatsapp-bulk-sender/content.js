@@ -206,8 +206,27 @@ async function orchestrateSendMessage(number, message, media = null) {
       // ── Text send: existing wa.me + button click approach (works reliably) ──
       await openChatViaWaMe(number, message);
 
+      // Health check: verify page.js is responsive (detects suspension issues)
+      let healthOk = false;
+      for (let h = 0; h < 3; h++) {
+        try {
+          const healthResult = await executeCommand('healthCheck', {}, 2000);
+          if (healthResult.alive) {
+            healthOk = true;
+            break;
+          }
+        } catch (e) {}
+        await new Promise(r => setTimeout(r, 500));
+      }
+
+      if (!healthOk) {
+        throw new Error('Page script not responding (tab may be suspended)');
+      }
+
+      // Wait for send button with exponential backoff
       let pageReady = false;
-      for (let attempt = 0; attempt < 10; attempt++) {
+      const maxAttempts = 20; // 20 attempts = ~60+ seconds with backoff
+      for (let attempt = 0; attempt < maxAttempts; attempt++) {
         try {
           const findResult = await executeCommand('findSendBtn', {}, 3000);
           if (findResult.found) {
@@ -215,13 +234,16 @@ async function orchestrateSendMessage(number, message, media = null) {
             break;
           }
         } catch (e) {
-          // Timeout expected while waiting
+          // Command timeout - expected while waiting
         }
-        await new Promise(r => setTimeout(r, 1000));
+
+        // Exponential backoff: starts at 500ms, increases to 2s max
+        const delay = Math.min(500 + (attempt * 200), 2000);
+        await new Promise(r => setTimeout(r, delay));
       }
 
       if (!pageReady) {
-        throw new Error('Chat page did not load - send button not found');
+        throw new Error('Chat page did not load - send button not found (20 attempts)');
       }
 
       const sendResult = await executeCommand('clickSendButton', {}, 35000);

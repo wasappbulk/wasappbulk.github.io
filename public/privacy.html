@@ -14,59 +14,118 @@
     li { margin-bottom: 6px; }
     .meta { color: #6B7280; font-size: 0.85rem; margin-bottom: 48px; }
     .back { display: inline-block; margin-bottom: 32px; color: #25D366; font-size: 0.9rem; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+    th, td { text-align: left; padding: 10px 12px; border: 1px solid #1F2937; font-size: 0.9rem; color: #9CA3AF; }
+    th { background: #161B22; color: #F9FAFB; font-weight: 600; }
   </style>
 </head>
 <body>
   <a href="/" class="back">← Back to WasappBulk</a>
   <h1>Privacy Policy</h1>
-  <p class="meta">Last updated: March 3, 2026</p>
+  <p class="meta">Last updated: March 19, 2026 &nbsp;|&nbsp; Effective date: March 19, 2026</p>
+
+  <p>This Privacy Policy describes how WasappBulk ("we", "our", or "us") collects, uses, stores, and shares information when you use the WhatsApp Bulk Sender Chrome extension and related services. By installing or using the extension, you agree to this policy.</p>
 
   <h2>1. Data We Collect</h2>
   <p>We collect only what is necessary to provide our service:</p>
-  <ul>
-    <li><strong>Email address</strong> — for account creation and login</li>
-    <li><strong>Password</strong> — stored as a secure hash, never in plain text</li>
-    <li><strong>Usage statistics</strong> — message count and dates to enforce plan limits</li>
-  </ul>
-  <p>We do <strong>NOT</strong> collect phone numbers you message, message content, your WhatsApp contacts, or any personally identifiable information about your recipients.</p>
+  <table>
+    <tr><th>Data Type</th><th>What We Collect</th><th>Purpose</th></tr>
+    <tr><td>Account data</td><td>Email address, hashed password, company name, phone number (optional)</td><td>Account creation, login, and support</td></tr>
+    <tr><td>Usage statistics</td><td>Number of messages sent per day, dates of activity</td><td>Enforcing daily plan limits</td></tr>
+    <tr><td>Subscription data</td><td>Current plan tier (Free / Pro / Enterprise)</td><td>Determining feature access</td></tr>
+    <tr><td>Authentication token</td><td>Session JWT stored locally on your device</td><td>Keeping you logged in</td></tr>
+    <tr><td>Media files (optional)</td><td>Images, videos, or documents you voluntarily upload via the extension (Pro/Enterprise plans only)</td><td>Attaching media to bulk messages; stored in Supabase Storage encrypted at rest</td></tr>
+    <tr><td>Message send logs</td><td>Timestamp, recipient phone number, and delivery status for each message sent</td><td>Displaying your send history and calculating daily usage limits</td></tr>
+  </table>
+  <p>We do <strong>NOT</strong> collect: WhatsApp contact lists, browsing history, or any personally identifiable information about your recipients beyond what you explicitly provide. Message text you compose is processed locally in your browser and is not stored on our servers. Recipient phone numbers appear only in send logs (see above) for the purpose of displaying your history.</p>
 
   <h2>2. How We Use Your Data</h2>
   <ul>
-    <li>To authenticate your account and manage your subscription plan</li>
-    <li>To track daily message usage against plan limits</li>
-    <li>We do <strong>NOT</strong> sell, share, or provide your data to third parties</li>
-    <li>We do <strong>NOT</strong> store your messages or contact lists on our servers</li>
+    <li>To authenticate your account and verify your subscription plan</li>
+    <li>To track daily message usage and enforce plan limits</li>
+    <li>To respond to support requests you submit</li>
+    <li>To send transactional emails (account creation, password reset) — no marketing emails without your consent</li>
+    <li>We do <strong>NOT</strong> use your data for advertising or sell it to third parties</li>
   </ul>
 
-  <h2>3. Data Storage</h2>
+  <h2>3. Data Handling</h2>
   <ul>
-    <li>Your phone number lists and messages are processed locally in your browser only</li>
-    <li>Authentication tokens are stored in Chrome local storage on your device</li>
-    <li>Account data (email, usage stats) is stored in a private Supabase database</li>
-    <li>Supabase is GDPR-compliant and SOC 2 Type 2 certified</li>
-    <li>No message content or recipient phone numbers ever leave your browser</li>
+    <li>Message text you compose is processed <strong>locally in your browser only</strong> — it is never sent to our servers</li>
+    <li>Messages are sent directly from your browser to WhatsApp Web — we act only as the interface</li>
+    <li>Recipient phone numbers are transmitted to our server <strong>only</strong> to record a send-log entry (timestamp + number + status) for your history and usage tracking</li>
+    <li>Media files you choose to upload (Pro/Enterprise) are transmitted over HTTPS and stored encrypted (AES-256) in Supabase Storage</li>
+    <li>Authentication tokens are stored in Chrome's local storage on your device and are cleared when you uninstall the extension or log out</li>
+    <li>All data in transit is encrypted using HTTPS/TLS</li>
   </ul>
 
-  <h2>4. Your Rights</h2>
+  <h2>4. Data Storage</h2>
   <ul>
-    <li>Delete your account and all associated data at any time by contacting us</li>
-    <li>Uninstall the extension to automatically remove all locally stored data</li>
-    <li>Request a copy of your data via email</li>
+    <li>Account data (email, hashed password, usage stats, send logs) is stored in Supabase — a GDPR-compliant, SOC 2 Type 2 certified cloud database</li>
+    <li>Media files you upload are stored in Supabase Storage, encrypted at rest with AES-256</li>
+    <li>Supabase servers are located in the United States</li>
+    <li>Authentication tokens are stored locally on your device in Chrome storage</li>
+    <li>Message text you compose is <strong>never</strong> stored on our servers — only the recipient phone number, timestamp, and send status are logged</li>
   </ul>
 
-  <h2>5. Security</h2>
+  <h2>5. Data Retention</h2>
   <ul>
-    <li>All communications use HTTPS encryption</li>
-    <li>WhatsApp's own end-to-end encryption protects your messages</li>
-    <li>No third-party tracking scripts or advertising cookies</li>
-    <li>Passwords are hashed and never stored in plain text</li>
+    <li><strong>Account data:</strong> Retained for the duration of your account. Deleted within 30 days of an account deletion request</li>
+    <li><strong>Usage statistics &amp; send logs:</strong> Daily usage counters reset at midnight UTC. Send log entries are retained for up to 12 months then automatically deleted</li>
+    <li><strong>Media files:</strong> Retained according to your plan — Free: 30 days, Pro: 90 days, Enterprise: 365 days. You may delete files at any time from within the extension</li>
+    <li><strong>Authentication tokens:</strong> Expire after 30 days or upon logout, whichever comes first</li>
+    <li><strong>Local browser data:</strong> Removed immediately when you uninstall the extension or clear Chrome storage</li>
   </ul>
 
-  <h2>6. Third-Party Services</h2>
-  <p>We use <strong>Supabase</strong> for authentication and usage tracking. Supabase is GDPR-compliant. Your data is not shared with any advertising or analytics platforms.</p>
+  <h2>6. Data Sharing</h2>
+  <p>We do <strong>NOT</strong> sell, rent, or trade your personal data. We share data only in these limited circumstances:</p>
+  <ul>
+    <li><strong>Supabase:</strong> Our database, authentication, and file storage provider. Account data, usage statistics, send logs, and any media files you upload are stored here. Supabase does not use your data for their own purposes. See <a href="https://supabase.com/privacy" target="_blank">Supabase Privacy Policy</a></li>
+    <li><strong>Legal requirements:</strong> We may disclose data if required by law, court order, or to protect the rights and safety of our users</li>
+    <li><strong>Business transfer:</strong> In the event of a merger or acquisition, your data may be transferred. You will be notified via email before any such transfer</li>
+    <li>No data is shared with advertising networks, analytics platforms, or data brokers</li>
+  </ul>
 
-  <h2>7. Contact</h2>
-  <p>For privacy questions or data deletion requests, email us at:<br/>
+  <h2>7. Chrome Extension Permissions</h2>
+  <p>The extension requests the following permissions and uses them solely as described:</p>
+  <table>
+    <tr><th>Permission</th><th>Why It Is Needed</th></tr>
+    <tr><td>tabs</td><td>To open WhatsApp Web and detect when it is loaded</td></tr>
+    <tr><td>storage</td><td>To save your login token and draft phone numbers locally on your device</td></tr>
+    <tr><td>alarms</td><td>To schedule delays between messages to avoid spam detection</td></tr>
+    <tr><td>https://web.whatsapp.com/*</td><td>To interact with WhatsApp Web to send messages</td></tr>
+    <tr><td>https://isfaiawbywrtwvinkizb.supabase.co/*</td><td>To authenticate your account and retrieve plan limits</td></tr>
+  </table>
+
+  <h2>8. Cookies</h2>
+  <p>The extension itself does not use cookies. Our website (wasappbulk.com) does not use advertising or tracking cookies. We use only essential session cookies required for the website to function.</p>
+
+  <h2>9. Children's Privacy</h2>
+  <p>This service is not directed to children under the age of 13. We do not knowingly collect personal information from children under 13. If you believe a child has provided us with personal data, please contact us at <a href="mailto:privacy@wasappbulk.com">privacy@wasappbulk.com</a> and we will delete it promptly.</p>
+
+  <h2>10. Your Rights</h2>
+  <ul>
+    <li><strong>Access:</strong> Request a copy of all data we hold about you</li>
+    <li><strong>Correction:</strong> Request correction of inaccurate data</li>
+    <li><strong>Deletion:</strong> Request deletion of your account and all associated data</li>
+    <li><strong>Portability:</strong> Request your data in a machine-readable format</li>
+    <li><strong>Opt-out:</strong> Uninstall the extension at any time to stop all data collection</li>
+  </ul>
+  <p>To exercise any of these rights, email <a href="mailto:privacy@wasappbulk.com">privacy@wasappbulk.com</a>. We will respond within 30 days.</p>
+
+  <h2>11. Security</h2>
+  <ul>
+    <li>All communications use HTTPS/TLS encryption</li>
+    <li>Passwords are hashed using bcrypt and never stored in plain text</li>
+    <li>WhatsApp's own end-to-end encryption protects your messages in transit</li>
+    <li>No third-party tracking scripts or advertising pixels on our service</li>
+    <li>Access to our database is restricted by Row Level Security — users can only access their own data</li>
+  </ul>
+
+  <h2>12. Changes to This Policy</h2>
+  <p>We may update this Privacy Policy from time to time. When we do, we will update the "Last updated" date at the top of this page. For material changes, we will notify you by email at least 14 days before the change takes effect. Continued use of the extension after that date constitutes acceptance of the updated policy.</p>
+
+  <h2>13. Contact</h2>
+  <p>For privacy questions, data requests, or concerns, contact us at:<br/>
   <a href="mailto:privacy@wasappbulk.com">privacy@wasappbulk.com</a></p>
 </body>
 </html>

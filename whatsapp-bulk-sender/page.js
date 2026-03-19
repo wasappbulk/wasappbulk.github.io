@@ -42,22 +42,55 @@ async function cmdFindChatInput() {
   return { success: false, found: false, error: `Chat input not found (selector: ${CHAT_INPUT_SELECTOR})` };
 }
 
-// ===== Command: Find Send Button (uses dynamic selector from Supabase) =====
+// ===== Command: Find Send Button (with fallback selectors) =====
 async function cmdFindSendButton() {
   try {
-    console.log('[Page] Finding send button using selector:', SEND_BUTTON_SELECTOR);
+    console.log('[Page] Finding send button using primary selector:', SEND_BUTTON_SELECTOR);
 
-    const sendButton = document.querySelector(SEND_BUTTON_SELECTOR);
+    let sendButton = document.querySelector(SEND_BUTTON_SELECTOR);
 
+    // Fallback selectors if primary doesn't work
     if (!sendButton) {
-      return { success: false, found: false, error: 'Send button not found' };
+      const fallbackSelectors = [
+        'button[aria-label*="Send"]',
+        'button[aria-label*="send"]',
+        '[data-testid="send-button"]',
+        'footer button:last-child',
+        'div[role="button"][aria-label*="Send"]'
+      ];
+
+      for (const selector of fallbackSelectors) {
+        console.log('[Page] Trying fallback selector:', selector);
+        sendButton = document.querySelector(selector);
+        if (sendButton) {
+          console.log('[Page] ✅ Found send button with fallback:', selector);
+          return { success: true, found: true, usedFallback: true };
+        }
+      }
+
+      return { success: false, found: false, error: 'Send button not found (primary + 5 fallbacks tried)' };
     }
 
     console.log('[Page] ✅ Found send button:', sendButton.getAttribute('data-icon'));
-    return { success: true, found: true };
+    return { success: true, found: true, usedFallback: false };
 
   } catch (e) {
     return { success: false, error: e.message };
+  }
+}
+
+// ===== Command: Health Check (verify page.js is alive) =====
+async function cmdHealthCheck() {
+  try {
+    const chatInput = document.querySelector(CHAT_INPUT_SELECTOR);
+    const isAlive = !!chatInput;
+    return {
+      success: true,
+      alive: isAlive,
+      message: isAlive ? 'Page script is responsive' : 'Page loaded but chat input not found'
+    };
+  } catch (e) {
+    return { success: false, error: 'Page script health check failed: ' + e.message };
   }
 }
 
@@ -332,6 +365,9 @@ window.addEventListener('wa-bulk-sender:cmd', async (event) => {
     console.log(`[Page] Received command: ${cmd}`);
 
     switch (cmd) {
+      case 'healthCheck':
+        result = await cmdHealthCheck();
+        break;
       case 'findSendBtn':
         result = await cmdFindSendButton();
         break;

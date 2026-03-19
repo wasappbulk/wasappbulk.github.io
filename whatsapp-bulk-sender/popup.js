@@ -124,10 +124,13 @@ setTimeout(() => {
 }, 3000); // Increased from 1.5s to 3s
 
 // ===== MEDIA MANAGER INITIALIZATION =====
+const SUPABASE_URL = SUPABASE_CONFIG.URL;
+const SUPABASE_ANON_KEY = SUPABASE_CONFIG.ANON_KEY;
+
 async function initMediaManager(token) {
-  if (!token || typeof SUPABASE_CONFIG === 'undefined' || mediaManager) return;
+  if (!token || mediaManager) return;
   try {
-    mediaManager = new MediaManager(SUPABASE_CONFIG.URL, SUPABASE_CONFIG.ANON_KEY, token);
+    mediaManager = new MediaManager(SUPABASE_URL, SUPABASE_ANON_KEY, token);
     const mediaBtn = document.getElementById('mediaButton');
     if (mediaBtn) mediaBtn.addEventListener('click', handleMediaButtonClick);
     const mediaInput = document.getElementById('mediaInput');
@@ -665,6 +668,7 @@ function checkAuthAndInit() {
         const elapsed = Date.now() - attemptStartTime;
         clearTimeout(timeout);
 
+        console.log({
           authenticated: response?.authenticated,
           hasToken: !!response?.token,
           attempt: attemptNum
@@ -1087,6 +1091,23 @@ phoneNumberInputEl.addEventListener('keypress', (e) => {
   }
 });
 
+// Handle paste event - split multiple numbers by delimiters
+phoneNumberInputEl.addEventListener('paste', (e) => {
+  e.preventDefault();
+  const pasted = (e.clipboardData || window.clipboardData).getData('text');
+
+  // Split by common delimiters: newlines, commas, semicolons, tabs
+  const lines = pasted.split(/[\n,;\t\r]+/).map(line => line.trim()).filter(line => line.length > 0);
+
+  // Add each line as a separate chip
+  lines.forEach(line => {
+    addPhoneChip(line);
+  });
+
+  // Clear input field
+  phoneNumberInputEl.value = '';
+});
+
 messageEl.addEventListener('input', () => {
   chrome.storage.local.set({ savedMessage: messageEl.value });
   updateCharCount();
@@ -1259,35 +1280,91 @@ clearBtn.addEventListener('click', () => {
 document.getElementById('importFile')?.addEventListener('change', (e) => {
   const file = e.target.files[0];
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (evt) => {
-    const imported = evt.target.result.trim();
-    const lines = imported.split('\n').filter(l => l.trim());
-    let addedCount = 0;
 
-    // Add each imported number as a chip
-    lines.forEach(line => {
-      const cleanNumber = line.replace(/\D/g, '');
-      if (cleanNumber.length > 0 && !phoneChips.some(c => c.number === cleanNumber)) {
-        phoneChips.push({
-          number: cleanNumber,
-          dialCode: selectedCountry.dialCode || '',
-          flag: flagEmoji(selectedCountry.iso2)
+  const fileName = file.name.toLowerCase();
+  const isExcelFile = fileName.endsWith('.xlsx') || fileName.endsWith('.xls');
+
+  if (isExcelFile) {
+    // Handle Excel files with SheetJS
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const data = new Uint8Array(evt.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+
+        let addedCount = 0;
+        let processedNumbers = new Set();
+
+        // Process all cells from Excel, flatten into single array
+        rows.forEach(row => {
+          if (Array.isArray(row)) {
+            row.forEach(cell => {
+              if (cell) {
+                const cellText = String(cell).trim();
+                const cleanNumber = cellText.replace(/\D/g, '');
+                if (cleanNumber.length > 0 && !processedNumbers.has(cleanNumber) && !phoneChips.some(c => c.number === cleanNumber)) {
+                  phoneChips.push({
+                    number: cleanNumber,
+                    dialCode: selectedCountry.dialCode || '',
+                    flag: flagEmoji(selectedCountry.iso2)
+                  });
+                  processedNumbers.add(cleanNumber);
+                  addedCount++;
+                }
+              }
+            });
+          }
         });
-        addedCount++;
-      }
-    });
 
-    if (addedCount > 0) {
-      renderPhoneChips();
-      savePhoneChips();
-      updateNumberCount();
-      showMessage(`${addedCount} number(s) imported`, 'success');
-    } else {
-      showMessage('No new numbers to import', 'warning');
-    }
-  };
-  reader.readAsText(file);
+        if (addedCount > 0) {
+          renderPhoneChips();
+          savePhoneChips();
+          updateNumberCount();
+          showMessage(`${addedCount} number(s) imported`, 'success');
+        } else {
+          showMessage('No new numbers to import', 'warning');
+        }
+      } catch (err) {
+        showMessage('Error reading Excel file. Make sure it\'s a valid .xlsx or .xls file', 'error');
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  } else {
+    // Handle CSV/TXT files with text parsing
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const imported = evt.target.result.trim();
+      // Split by multiple delimiters: newlines, commas, tabs, semicolons, carriage returns
+      const lines = imported.split(/[\n,;\t\r]+/).map(l => l.trim()).filter(l => l.length > 0);
+      let addedCount = 0;
+
+      // Add each imported number as a chip
+      lines.forEach(line => {
+        const cleanNumber = line.replace(/\D/g, '');
+        if (cleanNumber.length > 0 && !phoneChips.some(c => c.number === cleanNumber)) {
+          phoneChips.push({
+            number: cleanNumber,
+            dialCode: selectedCountry.dialCode || '',
+            flag: flagEmoji(selectedCountry.iso2)
+          });
+          addedCount++;
+        }
+      });
+
+      if (addedCount > 0) {
+        renderPhoneChips();
+        savePhoneChips();
+        updateNumberCount();
+        showMessage(`${addedCount} number(s) imported`, 'success');
+      } else {
+        showMessage('No new numbers to import', 'warning');
+      }
+    };
+    reader.readAsText(file);
+  }
+
   e.target.value = ''; // reset so same file can be re-imported
 });
 
