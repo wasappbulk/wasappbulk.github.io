@@ -5,6 +5,7 @@ import Index from "./pages/Index";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Guide from "./pages/Guide";
+import GuideUsingVariables from "./pages/GuideUsingVariables";
 import NotFound from "./pages/NotFound";
 import "./index.css";
 
@@ -31,6 +32,7 @@ function AppRoutes() {
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/guide" element={<Guide />} />
+        <Route path="/guide/UsingVariables" element={<GuideUsingVariables />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>
