@@ -14,7 +14,6 @@
     <nav class="fixed top-0 left-0 right-0 z-50 bg-black/95 backdrop-blur-md border-b border-gray-800">
         <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
             <a href="https://wasappbulk.github.io/" class="font-mono text-xl font-bold">WasappBulk</a>
-            <!-- Desktop Navigation -->
             <div class="hidden md:flex items-center gap-8">
                 <a href="https://wasappbulk.github.io/#features" class="text-sm text-gray-400 hover:text-white">Features</a>
                 <a href="https://wasappbulk.github.io/#how-it-works" class="text-sm text-gray-400 hover:text-white">How It Works</a>
@@ -25,10 +24,31 @@
             </div>
         </div>
     </nav>
-    <div class="pt-16"><div class="max-w-3xl mx-auto px-6 py-12">
-        <h1 class="text-3xl font-bold mb-8">Upload Excel or CSV Files</h1>
-        <p class="text-gray-400 mb-4">Import your contact list from Excel or CSV format coming soon</p>
-        <a href="/guide/" class="inline-block gradient-cta text-white text-sm font-semibold px-5 py-2 rounded">← Back to Guide</a>
-    </div></div>
+
+    <div class="pt-16">
+        <div class="max-w-6xl mx-auto px-6 py-12 flex gap-8">
+            <!-- Sidebar -->
+            <aside class="w-56 shrink-0 hidden md:block">
+                <div class="sticky top-24">
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-4">Guide</p>
+                    <nav class="flex flex-col gap-1">
+                        <a href="/guide/GettingStarted/" class="text-left px-3 py-2 rounded-md text-sm text-gray-400 hover:text-white hover:bg-gray-900">📚 Getting Started</a>
+                        <a href="/guide/UploadExcel/" class="text-left px-3 py-2 rounded-md text-sm bg-green-500/10 text-green-400 font-medium">📊 Upload Excel</a>
+                        <a href="/guide/UsingVariables/" class="text-left px-3 py-2 rounded-md text-sm text-gray-400 hover:text-white hover:bg-gray-900">✨ Using Variables</a>
+                        <a href="/guide/SendMessages/" class="text-left px-3 py-2 rounded-md text-sm text-gray-400 hover:text-white hover:bg-gray-900">📱 Send Messages</a>
+                        <a href="/guide/Media/" class="text-left px-3 py-2 rounded-md text-sm text-gray-400 hover:text-white hover:bg-gray-900">📎 Attach Media</a>
+                    </nav>
+                </div>
+            </aside>
+
+            <div class="flex-1 min-w-0">
+                <div>
+                    <h1 class="text-3xl font-bold mb-8">Upload Excel or CSV Files</h1>
+                    <p class="text-gray-400 mb-4">Import your contact list from Excel or CSV format coming soon</p>
+                    <a href="/guide/" class="inline-block gradient-cta text-white text-sm font-semibold px-5 py-2 rounded">← Back to Guide</a>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
