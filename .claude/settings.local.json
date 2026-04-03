@@ -40,7 +40,8 @@
       "WebFetch(domain:wasappbulk.github.io)",
       "Bash(npm run:*)",
       "mcp__browser-mcp__browser_navigate",
-      "mcp__browser-mcp__browser_wait"
+      "mcp__browser-mcp__browser_wait",
+      "mcp__browser-mcp__browser_screenshot"
     ]
   }
 }
