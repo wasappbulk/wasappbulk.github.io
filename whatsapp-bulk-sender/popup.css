@@ -669,6 +669,28 @@ body {
   color: var(--primary);
 }
 
+.clear-numbers-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  flex-shrink: 0;
+  transition: var(--transition);
+}
+
+.clear-numbers-btn:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+}
+
 .help-icon-btn {
   width: 18px;
   height: 18px;
@@ -930,6 +952,17 @@ body {
   color: var(--text-secondary);
 }
 
+.chip-name {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--primary);
+  line-height: 1.2;
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .chip-number {
   font-family: 'Courier New', monospace;
   font-weight: 500;
@@ -1065,6 +1098,34 @@ body {
   overflow-y: auto;
 }
 
+.name-variable-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  padding: 0 2px;
+}
+
+.name-variable-hint code {
+  background: var(--bg-elevated);
+  color: var(--primary);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 11px;
+}
+
+.name-variable-hint a {
+  color: var(--primary);
+  text-decoration: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: opacity 0.2s;
+}
+
+.name-variable-hint a:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
 /* Progress */
 .progress-section {
   padding: 14px 16px;
@@ -1111,6 +1172,19 @@ body {
 .stop-btn:hover {
   background: rgba(239, 68, 68, 0.1) !important;
   border-color: var(--error) !important;
+}
+
+.retry-btn {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 4px;
+  border-color: rgba(249, 115, 22, 0.4) !important;
+  color: #F97316 !important;
+}
+
+.retry-btn:hover {
+  background: rgba(249, 115, 22, 0.1) !important;
+  border-color: #F97316 !important;
 }
 
 .progress-stats {

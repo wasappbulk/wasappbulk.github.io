@@ -259,6 +259,9 @@
           <div class="nums-header-right">
             <label for="importFile" class="upload-excel-btn">Upload Excel</label>
             <input type="file" id="importFile" accept=".xlsx,.xls,.csv,.txt" style="display:none">
+            <button type="button" class="clear-numbers-btn" id="clearNumbersBtn" title="Clear all numbers">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4h6v2"></path></svg>
+            </button>
             <button class="help-icon-btn" title="Enter numbers with country code, one per line">?</button>
           </div>
         </div>
@@ -306,9 +309,10 @@
         <textarea
           id="message"
           class="input-field message-field"
-          placeholder="Type your message here..."
+          placeholder="Type your message here... Use {name} for personalization"
           rows="4"
         ></textarea>
+        <div class="name-variable-hint">Tip: Personalize with <code>{name}</code>, <code>{marks}</code>, <code>{city}</code>... <a href="https://wasappbulk.github.io/guide#variables" target="_blank" rel="noopener noreferrer">Read more →</a></div>
 
         <!-- Formatting Toolbar -->
         <div class="formatting-toolbar">
@@ -362,6 +366,9 @@
         <div class="progress-header">
           <strong>📊 Sending Progress</strong>
           <div style="display:flex; gap:6px;">
+            <button id="retryBtn" class="icon-btn retry-btn" style="display:none;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>Retry Failed
+            </button>
             <button id="pauseBtn" class="icon-btn">⏸ Pause</button>
             <button id="stopBtn" class="icon-btn stop-btn">⏹ Stop</button>
           </div>
