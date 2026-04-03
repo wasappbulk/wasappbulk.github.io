@@ -527,98 +527,204 @@ function VariablesSection() {
       <section className="mb-10">
         <h2 className="text-xl font-semibold text-foreground mb-3">What Are Message Variables?</h2>
         <p className="text-muted-foreground mb-4">
-          Variables are placeholders you add to your message template using curly braces{" "}
+          Variables are <strong className="text-foreground">placeholders</strong> you add to your message template using curly braces{" "}
           <code className="bg-muted px-1.5 py-0.5 rounded text-primary text-sm">{`{columnName}`}</code>.
           When the message is sent, WasappBulk automatically replaces each placeholder with that
           contact's actual data from your Excel file.
         </p>
+        <p className="text-muted-foreground mb-4">
+          This lets you send <strong className="text-foreground">personalized WhatsApp messages in bulk</strong> — greeting each person by name, including their order details, scores, city, or any custom field, all from a single message template without writing each message manually.
+        </p>
         <p className="text-muted-foreground">
-          This lets you send <strong className="text-foreground">personalized WhatsApp messages in bulk</strong> — greeting
-          each person by name, including their order details, scores, city, or any custom field —
-          all from a single message template without writing each message manually.
+          Think of it like a <strong className="text-foreground">mail merge</strong> — instead of writing 100 different messages, you write <strong>one template</strong> with placeholders, and WasappBulk fills them in with each person's data automatically.
         </p>
       </section>
 
+      {/* Simple Analogy */}
       <section className="mb-10">
-        <h2 className="text-xl font-semibold text-foreground mb-3">How It Works</h2>
-        <div className="space-y-4">
-          <Step n={1} title="Add column headers in your Excel file" desc={<>The first row must contain headers like <code className="bg-muted px-1 rounded text-primary">Name</code>, <code className="bg-muted px-1 rounded text-primary">Phone</code>, <code className="bg-muted px-1 rounded text-primary">Marks</code>, <code className="bg-muted px-1 rounded text-primary">City</code>, etc.</>} />
-          <Step n={2} title="Upload the Excel file to WasappBulk" desc="All columns are automatically detected and imported with each contact's data." />
-          <Step n={3} title={`Use {columnName} in your message`} desc="Type your message and insert variable placeholders wherever you want personalized data to appear." />
-          <Step n={4} title="Send — each contact gets their own personalized message" desc="WasappBulk replaces every placeholder with that contact's actual value before sending." />
+        <h2 className="text-xl font-semibold text-foreground mb-3">Simple Example</h2>
+        <div className="bg-muted/50 border border-border rounded-xl p-5 mb-6">
+          <p className="text-sm text-foreground mb-3"><strong>Instead of writing:</strong></p>
+          <div className="space-y-1 text-sm text-muted-foreground mb-4">
+            <p>❌ "Hi John, you scored 95!"</p>
+            <p>❌ "Hi Sarah, you scored 87!"</p>
+            <p>❌ "Hi Mike, you scored 92!"</p>
+          </div>
+          <p className="text-sm text-foreground mb-3"><strong>You write ONE template:</strong></p>
+          <div className="bg-background border border-border rounded-lg px-3 py-2 mb-4 text-sm font-mono text-primary">
+            "Hi {`{name}`}, you scored {`{marks}`}!"
+          </div>
+          <p className="text-sm text-muted-foreground">✓ WasappBulk automatically sends personalized versions to each person</p>
         </div>
       </section>
 
+      {/* How It Works */}
       <section className="mb-10">
-        <h2 className="text-xl font-semibold text-foreground mb-3">Example</h2>
-        <p className="text-muted-foreground text-sm mb-3">Your Excel file:</p>
-        <div className="overflow-x-auto mb-6">
-          <table className="w-full text-sm border border-border rounded-lg overflow-hidden">
-            <thead className="bg-muted">
-              <tr>
-                {["Name", "Phone", "Marks", "City"].map((h) => (
-                  <th key={h} className="text-left px-4 py-2 text-foreground font-semibold border-b border-border">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                ["John", "919876543210", "95", "Mumbai"],
-                ["Sara", "919123456789", "87", "Delhi"],
-                ["Ravi", "918765432109", "72", "Pune"],
-              ].map((row, i) => (
-                <tr key={i} className="border-b border-border last:border-0 hover:bg-muted/50">
-                  {row.map((cell, j) => (
-                    <td key={j} className="px-4 py-2 text-muted-foreground">{cell}</td>
+        <h2 className="text-xl font-semibold text-foreground mb-3">How It Works — Step by Step</h2>
+        <div className="space-y-4">
+          <Step n={1} title="Prepare Excel file with column headers" desc={<>Create an Excel file where the <strong className="text-foreground">first row is headers</strong>. Example: <code className="bg-muted px-1 rounded text-primary">Name</code>, <code className="bg-muted px-1 rounded text-primary">Phone</code>, <code className="bg-muted px-1 rounded text-primary">Marks</code>, <code className="bg-muted px-1 rounded text-primary">City</code></>} />
+          <Step n={2} title="Upload Excel to WasappBulk" desc="Click 'Upload Excel' — the extension reads all column headers and imports your contacts with their data." />
+          <Step n={3} title="Write message with {placeholders}" desc={<>Type your message and use <code className="bg-muted px-1 rounded text-primary">{`{columnName}`}</code> placeholders wherever you want personalized data.</>} />
+          <Step n={4} title="Click Send" desc="WasappBulk automatically replaces each placeholder with that person's actual data and sends the personalized message." />
+        </div>
+      </section>
+
+      {/* Multiple Real Examples */}
+      <section className="mb-10">
+        <h2 className="text-xl font-semibold text-foreground mb-3">Real-World Examples</h2>
+
+        {/* Example 1: Students */}
+        <div className="mb-8">
+          <p className="text-sm font-semibold text-foreground mb-3">📚 Example 1: Student Results</p>
+          <p className="text-muted-foreground text-sm mb-3">Your Excel file has columns: <code className="bg-muted px-1 rounded text-primary">Name</code>, <code className="bg-muted px-1 rounded text-primary">Marks</code>, <code className="bg-muted px-1 rounded text-primary">School</code>, <code className="bg-muted px-1 rounded text-primary">Phone</code></p>
+          <div className="overflow-x-auto mb-4">
+            <table className="w-full text-xs border border-border rounded-lg overflow-hidden">
+              <thead className="bg-muted">
+                <tr>
+                  {["Name", "Marks", "School", "Phone"].map((h) => (
+                    <th key={h} className="text-left px-3 py-2 text-foreground font-semibold border-b border-border">{h}</th>
                   ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {[
+                  ["Rohan", "92", "St. Xavier", "9876543210"],
+                  ["Ananya", "88", "Delhi Public", "9876543211"],
+                ].map((row, i) => (
+                  <tr key={i} className="border-b border-border last:border-0 hover:bg-muted/50">
+                    {row.map((cell, j) => (
+                      <td key={j} className="px-3 py-2 text-muted-foreground text-xs">{cell}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-muted-foreground text-sm mb-2">Your message template:</p>
+          <div className="bg-background border border-border rounded-lg px-3 py-2 mb-3 text-sm font-mono text-foreground whitespace-pre-line">
+            {"Hi "}<span className="text-primary font-semibold">{`{name}`}</span>{"! 🎉\nYour exam result: "}<span className="text-primary font-semibold">{`{marks}`}</span>{" marks\nSchool: "}<span className="text-primary font-semibold">{`{school}`}</span>
+          </div>
+          <p className="text-muted-foreground text-sm mb-2">What Rohan receives:</p>
+          <div className="bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground whitespace-pre-line">
+            {"Hi Rohan! 🎉\nYour exam result: 92 marks\nSchool: St. Xavier"}
+          </div>
         </div>
-        <p className="text-muted-foreground text-sm mb-2">Your message template:</p>
-        <div className="bg-muted rounded-lg px-4 py-3 mb-6 text-sm font-mono text-foreground border border-border whitespace-pre-line">
-          {"Hello "}<span className="text-primary font-semibold">{`{Name}`}</span>{"! 🎉\nYour exam result is out. You scored "}<span className="text-primary font-semibold">{`{Marks}`}</span>{" marks.\nResult sent to your address in "}<span className="text-primary font-semibold">{`{City}`}</span>{".\nCongratulations!"}
+
+        {/* Example 2: Business */}
+        <div className="mb-8">
+          <p className="text-sm font-semibold text-foreground mb-3">💼 Example 2: Business Meeting Reminder</p>
+          <p className="text-muted-foreground text-sm mb-3">Columns: <code className="bg-muted px-1 rounded text-primary">Name</code>, <code className="bg-muted px-1 rounded text-primary">Company</code>, <code className="bg-muted px-1 rounded text-primary">Time</code>, <code className="bg-muted px-1 rounded text-primary">Location</code>, <code className="bg-muted px-1 rounded text-primary">Phone</code></p>
+          <p className="text-muted-foreground text-sm mb-2">Your message:</p>
+          <div className="bg-background border border-border rounded-lg px-3 py-2 mb-3 text-sm font-mono text-foreground whitespace-pre-line">
+            {"Dear "}<span className="text-primary font-semibold">{`{name}`}</span>{",\n\nMeeting reminder: "}<span className="text-primary font-semibold">{`{time}`}</span>{"\n📍 Location: "}<span className="text-primary font-semibold">{`{location}`}</span>{"\nCompany: "}<span className="text-primary font-semibold">{`{company}`}</span>
+          </div>
+          <p className="text-muted-foreground text-sm mb-2">Result for Mr. Sharma (10 AM, Mumbai, TechCorp):</p>
+          <div className="bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground whitespace-pre-line">
+            {"Dear Mr. Sharma,\n\nMeeting reminder: 10 AM\n📍 Location: Mumbai\nCompany: TechCorp"}
+          </div>
         </div>
-        <p className="text-muted-foreground text-sm mb-3">What each person actually receives:</p>
+
+        {/* Example 3: E-commerce */}
+        <div>
+          <p className="text-sm font-semibold text-foreground mb-3">🛍️ Example 3: Order Confirmation</p>
+          <p className="text-muted-foreground text-sm mb-3">Columns: <code className="bg-muted px-1 rounded text-primary">Name</code>, <code className="bg-muted px-1 rounded text-primary">OrderID</code>, <code className="bg-muted px-1 rounded text-primary">Amount</code>, <code className="bg-muted px-1 rounded text-primary">City</code>, <code className="bg-muted px-1 rounded text-primary">Phone</code></p>
+          <p className="text-muted-foreground text-sm mb-2">Your message:</p>
+          <div className="bg-background border border-border rounded-lg px-3 py-2 mb-3 text-sm font-mono text-foreground whitespace-pre-line">
+            {"Hi "}<span className="text-primary font-semibold">{`{name}`}</span>{"! 🎉\n\nOrder confirmed!\nOrder ID: "}<span className="text-primary font-semibold">{`{orderid}`}</span>{"\nAmount: ₹"}<span className="text-primary font-semibold">{`{amount}`}</span>{"\nDelivery to: "}<span className="text-primary font-semibold">{`{city}`}</span>
+          </div>
+          <p className="text-muted-foreground text-sm mb-2">Result for customer with Order ORD12345, ₹5000, Delhi:</p>
+          <div className="bg-muted/30 border border-border rounded-lg px-3 py-2 text-sm text-foreground whitespace-pre-line">
+            {"Hi John! 🎉\n\nOrder confirmed!\nOrder ID: ORD12345\nAmount: ₹5000\nDelivery to: Delhi"}
+          </div>
+        </div>
+      </section>
+
+      {/* What columns can you use */}
+      <section className="mb-10">
+        <h2 className="text-xl font-semibold text-foreground mb-3">Any Excel Column Works!</h2>
+        <p className="text-muted-foreground text-sm mb-4">
+          You're not limited to "Name" and "Marks". <strong className="text-foreground">Any column header in your Excel becomes a variable</strong>. Here are common examples:
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {[
+            { header: "Name", variable: "{name}", example: "John, Sarah, Mike" },
+            { header: "Email", variable: "{email}", example: "john@test.com" },
+            { header: "Phone", variable: "{phone}", example: "9876543210" },
+            { header: "Marks", variable: "{marks}", example: "95, 87, 92" },
+            { header: "Score", variable: "{score}", example: "85, 90, 78" },
+            { header: "City", variable: "{city}", example: "Mumbai, Delhi, Pune" },
+            { header: "Company", variable: "{company}", example: "TechCorp, DesignHub" },
+            { header: "OrderID", variable: "{orderid}", example: "ORD12345" },
+            { header: "Amount", variable: "{amount}", example: "5000, 2500" },
+            { header: "Date", variable: "{date}", example: "2026-04-10" },
+            { header: "Package", variable: "{package}", example: "Premium, Standard" },
+            { header: "Status", variable: "{status}", example: "Pending, Shipped" },
+          ].map((item) => (
+            <div key={item.header} className="border border-border rounded-lg px-3 py-2.5">
+              <p className="text-xs text-muted-foreground mb-1">Column: <strong className="text-foreground">{item.header}</strong></p>
+              <p className="text-sm font-mono text-primary mb-1">{item.variable}</p>
+              <p className="text-xs text-muted-foreground">{item.example}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Common Mistakes */}
+      <section className="mb-10">
+        <h2 className="text-xl font-semibold text-foreground mb-3">Common Mistakes & How to Fix Them</h2>
+        <div className="space-y-4">
+          <div className="border border-red-200 bg-red-50 rounded-lg px-4 py-3">
+            <p className="text-sm font-semibold text-red-900 mb-1">❌ Wrong spelling:</p>
+            <p className="text-sm text-red-800 mb-2">Message: "Hi {`{nmae}`}, congratulations!"</p>
+            <p className="text-xs text-red-700">Result: "Hi {`{nmae}`}, congratulations!" — NOT replaced (typo!)</p>
+          </div>
+          <div className="border border-green-200 bg-green-50 rounded-lg px-4 py-3">
+            <p className="text-sm font-semibold text-green-900 mb-1">✅ Correct spelling:</p>
+            <p className="text-sm text-green-800 mb-2">Message: "Hi {`{name}`}, congratulations!"</p>
+            <p className="text-xs text-green-700">Result: "Hi John, congratulations!"</p>
+          </div>
+
+          <div className="border border-red-200 bg-red-50 rounded-lg px-4 py-3">
+            <p className="text-sm font-semibold text-red-900 mb-1">❌ Variable doesn't exist:</p>
+            <p className="text-sm text-red-800 mb-2">Message: "Your age is {`{age}`}" but Excel has no "Age" column</p>
+            <p className="text-xs text-red-700">Result: "Your age is {`{age}`}" — NOT replaced</p>
+          </div>
+          <div className="border border-green-200 bg-green-50 rounded-lg px-4 py-3">
+            <p className="text-sm font-semibold text-green-900 mb-1">✅ Use existing columns:</p>
+            <p className="text-sm text-green-800 mb-2">Make sure your Excel has the columns you want to use</p>
+            <p className="text-xs text-green-700">Message: "Score: {`{marks}`}" ✓ (Excel has "Marks" column)</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Important Syntax Rules */}
+      <section className="mb-10">
+        <h2 className="text-xl font-semibold text-foreground mb-3">Syntax Rules</h2>
         <div className="space-y-3">
           {[
-            { name: "John", msg: "Hello John! 🎉\nYour exam result is out. You scored 95 marks.\nResult sent to your address in Mumbai.\nCongratulations!" },
-            { name: "Sara", msg: "Hello Sara! 🎉\nYour exam result is out. You scored 87 marks.\nResult sent to your address in Delhi.\nCongratulations!" },
+            { rule: "Use curly braces", example: "{name}", note: "Always use {}, not () or []" },
+            { rule: "Match column names", example: "Excel has 'Name' → use {name}", note: "Case doesn't matter — {Name}, {name}, {NAME} all work" },
+            { rule: "No spaces inside", example: "{name} ✓ | { name } ❌", note: "Spaces break the placeholder" },
+            { rule: "Use any column", example: "{phone}, {marks}, {city}, {company}", note: "Any Excel header becomes a variable" },
           ].map((item) => (
-            <div key={item.name} className="bg-background border border-border rounded-lg px-4 py-3">
-              <p className="text-xs text-muted-foreground mb-1">→ {item.name}'s message</p>
-              <p className="text-sm text-foreground whitespace-pre-line">{item.msg}</p>
+            <div key={item.rule} className="border border-border rounded-lg px-4 py-3">
+              <p className="text-sm font-semibold text-foreground mb-1">{item.rule}</p>
+              <code className="text-xs bg-muted px-2 py-1 rounded text-primary font-mono">{item.example}</code>
+              <p className="text-xs text-muted-foreground mt-1">{item.note}</p>
             </div>
           ))}
         </div>
       </section>
 
       <section className="mb-10">
-        <h2 className="text-xl font-semibold text-foreground mb-3">Supported Variable Formats</h2>
-        <div className="space-y-3">
-          {[
-            { v: "{name}", desc: "Contact's name — works with any column named Name, Full Name, Contact Name, etc." },
-            { v: "{marks}", desc: "Any custom column — just match the placeholder to the exact column header." },
-            { v: "{city}", desc: "City, location or any other text column from your Excel." },
-            { v: "{phone}", desc: "Contact's phone number — automatically available for every contact." },
-          ].map((item) => (
-            <div key={item.v} className="flex gap-4 items-start border border-border rounded-lg px-4 py-3">
-              <code className="text-primary font-mono font-semibold text-sm shrink-0">{item.v}</code>
-              <p className="text-muted-foreground text-sm">{item.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="mb-10">
-        <h2 className="text-xl font-semibold text-foreground mb-3">Tips &amp; Notes</h2>
+        <h2 className="text-xl font-semibold text-foreground mb-3">Tips &amp; Best Practices</h2>
         <TipList items={[
           { icon: "✓", text: <>Variable names are <strong className="text-foreground">case-insensitive</strong> — <code className="bg-muted px-1 rounded text-primary">{`{Name}`}</code>, <code className="bg-muted px-1 rounded text-primary">{`{name}`}</code> and <code className="bg-muted px-1 rounded text-primary">{`{NAME}`}</code> all work the same.</> },
-          { icon: "✓", text: <>If a contact has no value for a variable, the placeholder is replaced with an <strong className="text-foreground">empty string</strong> — no broken text.</> },
-          { icon: "✓", text: <>You can use <strong className="text-foreground">as many variables as you want</strong> in a single message.</> },
-          { icon: "✓", text: <>Works with <strong className="text-foreground">.xlsx, .xls</strong> Excel files and <strong className="text-foreground">.csv</strong> files.</> },
-          { icon: "⚠", text: <>Make sure your Excel's first row contains <strong className="text-foreground">column headers</strong>, otherwise variables won't be detected.</> },
+          { icon: "✓", text: <>You can use <strong className="text-foreground">multiple variables in one message</strong> — as many as you want: <code className="bg-muted px-1 rounded text-primary">{`{name}`}</code>, <code className="bg-muted px-1 rounded text-primary">{`{marks}`}</code>, <code className="bg-muted px-1 rounded text-primary">{`{city}`}</code>, etc.</> },
+          { icon: "✓", text: <>If a contact has no value for a variable, it's replaced with <strong className="text-foreground">empty text</strong> — no broken messages.</> },
+          { icon: "✓", text: <>Works with <strong className="text-foreground">.xlsx, .xls, .csv</strong> files — any spreadsheet format.</> },
+          { icon: "✓", text: <>Your Excel's <strong className="text-foreground">first row MUST be column headers</strong> for variables to be detected automatically.</> },
+          { icon: "⚠", text: <>Double-check spelling of variable names — they must match your Excel column headers exactly.</> },
         ]} />
       </section>
 
