@@ -1,6 +1,7 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 const menuItems = [
   { id: "getting-started", label: "Getting Started" },
@@ -732,6 +733,15 @@ function VariablesSection() {
         title="Ready to send personalized WhatsApp messages?"
         desc="Install WasappBulk, upload your Excel file with contact names and data, and start sending personalized bulk WhatsApp messages in minutes — no coding required."
       />
+
+      <div className="mt-10 pt-10 border-t border-border">
+        <Link
+          to="/guide/UsingVariables"
+          className="inline-block gradient-cta text-primary-foreground text-sm font-semibold px-5 py-2 rounded-[var(--radius)] hover:scale-[1.02] active:scale-[0.98] transition-transform"
+        >
+          → Read Full Variables Guide
+        </Link>
+      </div>
     </article>
   );
 }
