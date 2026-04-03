@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Using Variables - WasappBulk Guide</title>
+    <meta name="description" content="Learn how to personalize WhatsApp messages with variables in WasappBulk" />
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        color: #1f2937;
+        background: #f9fafb;
+        line-height: 1.6;
+      }
+      .container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 40px 20px;
+      }
+      h1 {
+        font-size: 2rem;
+        margin-bottom: 10px;
+        color: #000;
+      }
+      .subtitle {
+        color: #6b7280;
+        font-size: 1.1rem;
+        margin-bottom: 30px;
+      }
+      section {
+        margin-bottom: 40px;
+      }
+      h2 {
+        font-size: 1.5rem;
+        margin-bottom: 20px;
+        color: #000;
+      }
+      h3 {
+        font-size: 1.2rem;
+        margin-top: 20px;
+        margin-bottom: 10px;
+        color: #000;
+      }
+      p {
+        margin-bottom: 15px;
+        color: #374151;
+      }
+      code {
+        background: #e5e7eb;
+        color: #2563eb;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-family: 'Courier New', monospace;
+        font-size: 0.9rem;
+      }
+      .example-box {
+        background: #f3f4f6;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+      }
+      .example-title {
+        font-weight: 600;
+        margin-bottom: 10px;
+        color: #000;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+        background: white;
+      }
+      th {
+        background: #f3f4f6;
+        padding: 12px;
+        text-align: left;
+        font-weight: 600;
+        border-bottom: 2px solid #d1d5db;
+      }
+      td {
+        padding: 12px;
+        border-bottom: 1px solid #e5e7eb;
+      }
+      ul, ol {
+        margin: 15px 0 15px 20px;
+        color: #374151;
+      }
+      li {
+        margin-bottom: 8px;
+      }
+      .tip-box {
+        background: #dbeafe;
+        border-left: 4px solid #2563eb;
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 4px;
+      }
+      .tip-box strong {
+        color: #1e40af;
+      }
+      .back-link {
+        color: #2563eb;
+        text-decoration: none;
+        margin-bottom: 20px;
+        display: inline-block;
+      }
+      .back-link:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <a href="https://wasappbulk.github.io/" class="back-link">← Back to Home</a>
+
+      <h1>Personalize WhatsApp Messages with Variables</h1>
+      <p class="subtitle">Learn how to use variables to send personalized bulk messages to each contact</p>
+
+      <section>
+        <h2>What Are Message Variables?</h2>
+        <p>
+          Variables are <strong>placeholders</strong> you add to your message template using curly braces
+          <code>{columnName}</code>. When the message is sent, WasappBulk automatically replaces each
+          placeholder with that contact's actual data from your Excel file.
+        </p>
+        <p>
+          This lets you send <strong>personalized WhatsApp messages in bulk</strong> — greeting each person
+          by name, including their order details, scores, city, or any custom field, all from a single
+          message template without writing each message manually.
+        </p>
+      </section>
+
+      <section>
+        <h2>Simple Example</h2>
+        <div class="example-box">
+          <div class="example-title">❌ Instead of writing:</div>
+          <p style="margin: 5px 0;">• "Hi John, you scored 95!"</p>
+          <p style="margin: 5px 0;">• "Hi Sarah, you scored 87!"</p>
+          <p style="margin: 5px 0;">• "Hi Mike, you scored 92!"</p>
+
+          <div class="example-title" style="margin-top: 15px;">✅ You write ONE template:</div>
+          <code style="display: block; padding: 10px; margin: 10px 0;">"Hi {name}, you scored {marks}!"</code>
+          <p>WasappBulk automatically sends personalized versions to each person</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>How It Works</h2>
+        <ol>
+          <li><strong>Prepare Excel file with column headers</strong><br>
+            Create an Excel file where the first row is headers. Example: <code>Name</code>, <code>Phone</code>, <code>Marks</code>, <code>City</code></li>
+          <li><strong>Upload Excel to WasappBulk</strong><br>
+            Click 'Upload Excel' — the extension reads all column headers and imports your contacts with their data.</li>
+          <li><strong>Write message with {placeholders}</strong><br>
+            Type your message and use <code>{columnName}</code> placeholders wherever you want personalized data.</li>
+          <li><strong>Click Send</strong><br>
+            WasappBulk automatically replaces each placeholder with that person's actual data and sends the personalized message.</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>Real-World Examples</h2>
+
+        <h3>📚 Example 1: Student Results</h3>
+        <p>Your Excel file has columns: <code>Name</code>, <code>Marks</code>, <code>School</code>, <code>Phone</code></p>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Marks</th>
+              <th>School</th>
+              <th>Phone</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Rohan</td>
+              <td>92</td>
+              <td>St. Xavier</td>
+              <td>9876543210</td>
+            </tr>
+            <tr>
+              <td>Ananya</td>
+              <td>88</td>
+              <td>Delhi Public</td>
+              <td>9876543211</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="example-box">
+          <div class="example-title">Your message template:</div>
+          <code style="display: block; padding: 10px; margin: 10px 0;">Hi {name}! 🎉<br>Your exam result: {marks} marks<br>School: {school}</code>
+        </div>
+        <div class="example-box">
+          <div class="example-title">What Rohan receives:</div>
+          <code style="display: block; padding: 10px; margin: 10px 0;">Hi Rohan! 🎉<br>Your exam result: 92 marks<br>School: St. Xavier</code>
+        </div>
+
+        <h3>💼 Example 2: Business Meeting Reminder</h3>
+        <p>Columns: <code>Name</code>, <code>Company</code>, <code>Time</code>, <code>Location</code>, <code>Phone</code></p>
+        <div class="example-box">
+          <div class="example-title">Your message:</div>
+          <code style="display: block; padding: 10px; margin: 10px 0;">Dear {name},<br><br>Meeting reminder: {time}<br>📍 Location: {location}<br>Company: {company}</code>
+        </div>
+
+        <h3>🛍️ Example 3: Order Confirmation</h3>
+        <p>Columns: <code>Name</code>, <code>OrderID</code>, <code>Amount</code>, <code>City</code>, <code>Phone</code></p>
+        <div class="example-box">
+          <div class="example-title">Your message:</div>
+          <code style="display: block; padding: 10px; margin: 10px 0;">Hi {name}! 🎉<br><br>Order confirmed!<br>Order ID: {orderid}<br>Amount: ₹{amount}<br>Delivery to: {city}</code>
+        </div>
+      </section>
+
+      <section>
+        <h2>Any Excel Column Works!</h2>
+        <p>You're not limited to "Name" and "Marks". <strong>Any column header in your Excel becomes a variable</strong>. Here are common examples:</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Column Header</th>
+              <th>Use in Message</th>
+              <th>Example</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Name</td>
+              <td><code>{name}</code></td>
+              <td>John, Sarah, Mike</td>
+            </tr>
+            <tr>
+              <td>Email</td>
+              <td><code>{email}</code></td>
+              <td>john@test.com</td>
+            </tr>
+            <tr>
+              <td>Marks</td>
+              <td><code>{marks}</code></td>
+              <td>95, 87, 92</td>
+            </tr>
+            <tr>
+              <td>City</td>
+              <td><code>{city}</code></td>
+              <td>Mumbai, Delhi, Pune</td>
+            </tr>
+            <tr>
+              <td>Company</td>
+              <td><code>{company}</code></td>
+              <td>TechCorp, DesignHub</td>
+            </tr>
+            <tr>
+              <td>OrderID</td>
+              <td><code>{orderid}</code></td>
+              <td>ORD12345</td>
+            </tr>
+            <tr>
+              <td>Amount</td>
+              <td><code>{amount}</code></td>
+              <td>5000, 2500</td>
+            </tr>
+            <tr>
+              <td>Package</td>
+              <td><code>{package}</code></td>
+              <td>Premium, Standard</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Common Mistakes</h2>
+        <div class="tip-box" style="background: #fee2e2; border-left-color: #dc2626;">
+          <div class="example-title" style="color: #991b1b;">❌ Wrong spelling:</div>
+          <p>Message: "Hi {nmae}, congratulations!"</p>
+          <p style="margin-top: 10px; font-size: 0.9rem;">Result: "Hi {nmae}, congratulations!" — NOT replaced (typo!)</p>
+        </div>
+
+        <div class="tip-box" style="background: #dcfce7; border-left-color: #16a34a;">
+          <div class="example-title" style="color: #15803d;">✅ Correct spelling:</div>
+          <p>Message: "Hi {name}, congratulations!"</p>
+          <p style="margin-top: 10px; font-size: 0.9rem;">Result: "Hi John, congratulations!"</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Syntax Rules</h2>
+        <ul>
+          <li><strong>Use curly braces:</strong> <code>{name}</code> ✓ | <code>(name)</code> ❌ | <code>[name]</code> ❌</li>
+          <li><strong>Match column names:</strong> If Excel has 'Name', use <code>{name}</code></li>
+          <li><strong>No spaces inside:</strong> <code>{name}</code> ✓ | <code>{ name }</code> ❌</li>
+          <li><strong>Case-insensitive:</strong> <code>{Name}</code>, <code>{name}</code>, <code>{NAME}</code> all work</li>
+          <li><strong>Use any column:</strong> <code>{phone}</code>, <code>{marks}</code>, <code>{city}</code>, <code>{company}</code></li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Tips & Best Practices</h2>
+        <ul>
+          <li>You can use <strong>multiple variables</strong> in one message — as many as you want</li>
+          <li>If a contact has no value for a variable, it's replaced with <strong>empty text</strong> — no broken messages</li>
+          <li>Works with <strong>.xlsx, .xls, .csv</strong> files — any spreadsheet format</li>
+          <li>Your Excel's <strong>first row MUST be column headers</strong> for variables to be detected</li>
+          <li>Double-check spelling — variables must match your Excel column headers exactly</li>
+        </ul>
+      </section>
+
+      <div class="tip-box">
+        <strong>Ready to send personalized messages?</strong><br>
+        Install WasappBulk free, upload your Excel file, and start sending personalized bulk WhatsApp messages in minutes.
+      </div>
+
+      <a href="https://wasappbulk.github.io/" class="back-link">← Back to Home</a>
+    </div>
+  </body>
+</html>
