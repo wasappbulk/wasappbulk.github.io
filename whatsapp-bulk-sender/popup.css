@@ -1114,15 +1114,15 @@ body {
 }
 
 .name-variable-hint a {
-  color: var(--primary);
+  color: #2563eb;
   text-decoration: none;
   cursor: pointer;
   font-weight: 500;
-  transition: opacity 0.2s;
+  transition: color 0.2s;
 }
 
 .name-variable-hint a:hover {
-  opacity: 0.8;
+  color: #1d4ed8;
   text-decoration: underline;
 }
 
