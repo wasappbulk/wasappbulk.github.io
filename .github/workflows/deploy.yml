@@ -39,9 +39,6 @@ jobs:
           cp public/robots.txt dist/
           cp public/sitemap.xml dist/
 
-      - name: Copy guide folder to dist
-        run: cp -r guide dist/
-
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
