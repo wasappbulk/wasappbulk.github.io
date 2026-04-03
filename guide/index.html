@@ -6,8 +6,16 @@
     <title>WasappBulk – Guide</title>
     <meta name="description" content="Complete guide to using WasappBulk - WhatsApp Bulk Sender" />
     <script>
-      // Redirect to root with guide hash
-      window.location.replace('/#/guide');
+      // Use the same SPA redirect logic as 404.html for consistent routing
+      var l = window.location;
+      var pathname = l.pathname.slice(1).replace(/&/g, '~and~');
+      if (pathname === 'guide' || pathname === 'guide/') {
+        l.replace(
+          l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+          '/?p=/' + pathname.replace(/\/$/, '') +
+          l.hash
+        );
+      }
     </script>
   </head>
   <body>
