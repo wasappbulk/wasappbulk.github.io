@@ -5,7 +5,11 @@ import Index from "./pages/Index";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Guide from "./pages/Guide";
-import GuideUsingVariables from "./pages/GuideUsingVariables";
+import GettingStarted from "./pages/GettingStarted";
+import SendMessages from "./pages/SendMessages";
+import Media from "./pages/Media";
+import UploadExcel from "./pages/UploadExcel";
+import UsingVariables from "./pages/UsingVariables";
 import NotFound from "./pages/NotFound";
 import "./index.css";
 
@@ -32,7 +36,11 @@ function AppRoutes() {
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/guide" element={<Guide />} />
-        <Route path="/guide/UsingVariables" element={<GuideUsingVariables />} />
+        <Route path="/guide/getting-started" element={<GettingStarted />} />
+        <Route path="/guide/send-messages" element={<SendMessages />} />
+        <Route path="/guide/media" element={<Media />} />
+        <Route path="/guide/upload-excel" element={<UploadExcel />} />
+        <Route path="/guide/using-variables" element={<UsingVariables />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>

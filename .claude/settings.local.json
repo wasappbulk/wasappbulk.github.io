@@ -41,7 +41,9 @@
       "Bash(npm run:*)",
       "mcp__browser-mcp__browser_navigate",
       "mcp__browser-mcp__browser_wait",
-      "mcp__browser-mcp__browser_screenshot"
+      "mcp__browser-mcp__browser_screenshot",
+      "Bash(cp:*)",
+      "mcp__browser-mcp__browser_press_key"
     ]
   }
 }
