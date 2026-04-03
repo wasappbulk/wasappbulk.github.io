@@ -26,6 +26,7 @@ const startBtn = document.getElementById('startBtn');
 const clearBtn = document.getElementById('clearBtn');
 const pauseBtn = document.getElementById('pauseBtn');
 const stopBtn = document.getElementById('stopBtn');
+const retryBtn = document.getElementById('retryBtn');
 const statusDot = document.getElementById('statusDot');
 const statusText = document.getElementById('statusText');
 const numberCountEl = document.getElementById('numberCount');
@@ -51,9 +52,15 @@ let currentMedia = null;
 
 // Message log state
 let logQueue      = [];
+let logStatuses   = [];
 let logProcessed  = 0;
 let logPrevSent   = 0;
 let logPrevFailed = 0;
+
+// Current session info (for retry)
+let currentMessage    = '';
+let currentDelaySec   = 10;
+let currentRandomize  = true;
 
 // ===== IMPROVED INITIALIZATION WITH KEEP-ALIVE =====
 
@@ -518,6 +525,7 @@ function removePhoneChip(index) {
 function renderPhoneChips() {
   chipsListEl.innerHTML = phoneChips.map((chip, idx) => `
     <div class="phone-chip valid">
+      ${chip.name ? `<div class="chip-name">${chip.name}</div>` : ''}
       <div class="chip-number">${chip.number}</div>
       <button type="button" class="chip-delete" data-idx="${idx}" title="Remove">
         ×
@@ -539,7 +547,10 @@ function savePhoneChips() {
     .map(chip => chip.dialCode + chip.number)
     .join('\n');
   phoneNumbersEl.value = phoneNumbersText;
-  chrome.storage.local.set({ savedPhones: phoneNumbersText });
+  chrome.storage.local.set({
+    savedPhones: phoneNumbersText,
+    savedChipsData: JSON.stringify(phoneChips.map(c => ({ number: c.number, dialCode: c.dialCode, name: c.name || '', vars: c.vars || {} })))
+  });
 }
 
 function loadPhoneChips() {
@@ -576,7 +587,7 @@ function loadPhoneChips() {
 }
 
 // Load saved data from storage
-chrome.storage.local.get(['savedPhones', 'savedMessage', 'savedDelay', 'savedCountry'], (data) => {
+chrome.storage.local.get(['savedPhones', 'savedMessage', 'savedDelay', 'savedCountry', 'savedChipsData'], (data) => {
   if (data.savedMessage) messageEl.value = data.savedMessage;
   if (data.savedDelay) delaySecEl.value = data.savedDelay;
   if (data.savedCountry) {
@@ -586,11 +597,26 @@ chrome.storage.local.get(['savedPhones', 'savedMessage', 'savedDelay', 'savedCou
 
   initCountryPicker();
 
-  // Load phone chips from saved data
-  if (data.savedPhones) {
+  // Load phone chips from saved data (prefer savedChipsData with names)
+  if (data.savedChipsData) {
+    try {
+      const saved = JSON.parse(data.savedChipsData);
+      phoneChips = saved.map(c => ({
+        number: c.number,
+        dialCode: c.dialCode,
+        flag: flagEmoji(selectedCountry.iso2),
+        name: c.name || '',
+        vars: c.vars || {}
+      }));
+      renderPhoneChips();
+    } catch (e) {
+      // fall through to savedPhones below
+    }
+  }
+
+  if (phoneChips.length === 0 && data.savedPhones) {
     const lines = data.savedPhones.split('\n').filter(l => l.trim());
     const countryCodeDigits = (selectedCountry.dialCode || '').replace(/\D/g, '');
-    phoneChips = [];
     lines.forEach(line => {
       let allDigits = line.replace(/\D/g, '');
       let phoneNumber = allDigits;
@@ -601,7 +627,8 @@ chrome.storage.local.get(['savedPhones', 'savedMessage', 'savedDelay', 'savedCou
         phoneChips.push({
           number: phoneNumber,
           dialCode: selectedCountry.dialCode || '',
-          flag: flagEmoji(selectedCountry.iso2)
+          flag: flagEmoji(selectedCountry.iso2),
+          name: ''
         });
       }
     });
@@ -739,6 +766,31 @@ function showPlanInfo(stats) {
   blockingScreen.style.display = 'none';
   mainContent.style.display = 'block';
   // Plan info removed from main page — visible in Settings only
+  restoreFinalReport();
+}
+
+function restoreFinalReport() {
+  if (isRunning) return;
+  chrome.storage.local.get('finalReport', (data) => {
+    if (!data.finalReport) return;
+    const { sent, failed, total, progressPercent, logHtml, retryNumbers } = data.finalReport;
+    sentCountEl.textContent = sent;
+    failedCountEl.textContent = failed;
+    totalCountEl.textContent = total;
+    progressBar.style.width = progressPercent + '%';
+    progressSection.style.display = 'block';
+    document.getElementById('progressEmpty').style.display = 'none';
+    pauseBtn.style.display = 'none';
+    stopBtn.style.display = 'none';
+    countdownEl.style.display = 'none';
+    retryBtn.style.display = (retryNumbers && retryNumbers.length > 0) ? '' : 'none';
+    const msgLog = document.getElementById('msgLog');
+    const msgLogBody = document.getElementById('msgLogBody');
+    if (logHtml && msgLog && msgLogBody) {
+      msgLogBody.innerHTML = logHtml;
+      msgLog.style.display = 'block';
+    }
+  });
 }
 
 // ===== Auth Tab Switching =====
@@ -1081,6 +1133,14 @@ openWhatsAppBtn.addEventListener('click', async () => {
 });
 
 // Phone input field - Enter to add chip
+document.getElementById('clearNumbersBtn').addEventListener('click', () => {
+  phoneChips = [];
+  renderPhoneChips();
+  savePhoneChips();
+  updateNumberCount();
+  phoneNumberInputEl.value = '';
+});
+
 phoneNumberInputEl.addEventListener('keypress', (e) => {
   if (e.key === 'Enter') {
     e.preventDefault();
@@ -1200,12 +1260,31 @@ startBtn.addEventListener('click', async () => {
     return;
   }
 
-  // Prepare queue
-  const queue = numbers.map(number => ({
-    number,
-    message,
-    media: attachedMedia || null
-  }));
+  // Prepare queue — personalize message per contact using {name}
+  const queue = phoneChips
+    .map(chip => {
+      let number = chip.number;
+      const countryCode = chip.dialCode.replace(/\D/g, '');
+      if (number.startsWith(countryCode)) number = number.substring(countryCode.length);
+      const fullNumber = chip.dialCode + number;
+      if (fullNumber.replace(/\D/g, '').length < 10) return null;
+      const personalizedMessage = message.replace(/\{(\w+)\}/gi, (match, key) => {
+        const k = key.toLowerCase();
+        if (chip.vars && k in chip.vars) return chip.vars[k];
+        if (k === 'name') return chip.name || '';
+        return match;
+      });
+      return { number: fullNumber, message: personalizedMessage, media: attachedMedia || null };
+    })
+    .filter(Boolean);
+
+  // Clear any saved final report before starting new session
+  chrome.storage.local.remove('finalReport');
+
+  // Save session info for retry
+  currentMessage   = message;
+  currentDelaySec  = delaySec;
+  currentRandomize = randomize;
 
   // Send to background.js
   chrome.runtime.sendMessage({
@@ -1231,9 +1310,9 @@ startBtn.addEventListener('click', async () => {
 pauseBtn.addEventListener('click', () => {
   chrome.runtime.sendMessage({ action: 'pauseQueue' }, (response) => {
     if (response?.success) {
-      isPaused = true;
-      pauseBtn.textContent = '▶️ Resume';
-      showMessage('Paused. Click Resume to continue.', 'info');
+      isPaused = !isPaused;
+      pauseBtn.textContent = isPaused ? '▶️ Resume' : '⏸ Pause';
+      showMessage(isPaused ? 'Paused. Click Resume to continue.' : 'Resumed!', 'info');
     }
   });
 });
@@ -1247,6 +1326,19 @@ stopBtn.addEventListener('click', () => {
         isPaused = false;
         hideProgress();
         showMessage('Stopped by user.', 'info');
+        const logBody = document.getElementById('msgLogBody');
+        const s = parseInt(sentCountEl.textContent) || 0;
+        const f = parseInt(failedCountEl.textContent) || 0;
+        const t = parseInt(totalCountEl.textContent) || 0;
+        chrome.storage.local.set({ finalReport: {
+          sent: s, failed: f, total: t,
+          progressPercent: t > 0 ? Math.round((s + f) / t * 100) : 0,
+          logHtml: logBody ? logBody.innerHTML : '',
+          retryNumbers: getRetryNumbers(),
+          originalMessage: currentMessage,
+          originalDelay: currentDelaySec,
+          originalRandomize: currentRandomize
+        }});
       }
     });
   }
@@ -1260,7 +1352,7 @@ clearBtn.addEventListener('click', () => {
     messageEl.value = '';
     phoneNumberInputEl.value = '';
     renderPhoneChips();
-    chrome.storage.local.remove(['savedPhones', 'savedMessage']);
+    chrome.storage.local.remove(['savedPhones', 'savedMessage', 'finalReport']);
     updateNumberCount();
     updateCharCount();
     // Reset progress tab to empty state
@@ -1297,32 +1389,104 @@ document.getElementById('importFile')?.addEventListener('change', (e) => {
         let addedCount = 0;
         let processedNumbers = new Set();
 
-        // Process all cells from Excel, flatten into single array
-        rows.forEach(row => {
-          if (Array.isArray(row)) {
-            row.forEach(cell => {
-              if (cell) {
-                const cellText = String(cell).trim();
-                const cleanNumber = cellText.replace(/\D/g, '');
-                if (cleanNumber.length > 0 && !processedNumbers.has(cleanNumber) && !phoneChips.some(c => c.number === cleanNumber)) {
-                  phoneChips.push({
-                    number: cleanNumber,
-                    dialCode: selectedCountry.dialCode || '',
-                    flag: flagEmoji(selectedCountry.iso2)
-                  });
-                  processedNumbers.add(cleanNumber);
-                  addedCount++;
-                }
+        if (rows.length === 0) {
+          showMessage('No data found in Excel file', 'warning');
+          return;
+        }
+
+        // Detect if first row is a header row with name + phone columns
+        const firstRow = rows[0] || [];
+        const firstRowTexts = firstRow.map(c => String(c || '').toLowerCase().trim());
+        const nameColIdx = firstRowTexts.findIndex(t =>
+          t === 'name' || t === 'contact name' || t === 'customer name' || t === 'first name' || t === 'full name'
+        );
+        const phoneColIdx = firstRowTexts.findIndex(t =>
+          t.includes('phone') || t.includes('mobile') || t.includes('number') || t.includes('whatsapp')
+        );
+        const hasHeaders = nameColIdx !== -1 && phoneColIdx !== -1;
+
+        if (hasHeaders) {
+          // Header-based extraction: skip first row, read ALL columns as variables
+          rows.slice(1).forEach(row => {
+            const name = String(row[nameColIdx] || '').trim();
+            const phone = String(row[phoneColIdx] || '').trim();
+            const cleanNumber = phone.replace(/\D/g, '');
+            if (cleanNumber.length >= 7 && !processedNumbers.has(cleanNumber) && !phoneChips.some(c => c.number === cleanNumber)) {
+              // Build vars from every column (key = lowercased header)
+              const vars = {};
+              firstRowTexts.forEach((header, idx) => {
+                if (header) vars[header] = String(row[idx] || '').trim();
+              });
+              vars['phone'] = cleanNumber;
+              phoneChips.push({
+                number: cleanNumber,
+                dialCode: selectedCountry.dialCode || '',
+                flag: flagEmoji(selectedCountry.iso2),
+                name,
+                vars
+              });
+              processedNumbers.add(cleanNumber);
+              addedCount++;
+            }
+          });
+        } else {
+          // Check if it's a 2-column format: col1 = name (has letters), col2 = phone (digits)
+          const sampleRow = rows[0];
+          const isTwoColFormat = sampleRow && sampleRow.length >= 2 &&
+            /[a-zA-Z]/.test(String(sampleRow[0] || '')) &&
+            /^\d+$/.test(String(sampleRow[1] || '').replace(/[\s\-\+\(\)]/g, ''));
+
+          if (isTwoColFormat) {
+            rows.forEach(row => {
+              const name = String(row[0] || '').trim();
+              const phone = String(row[1] || '').trim();
+              const cleanNumber = phone.replace(/\D/g, '');
+              if (cleanNumber.length >= 7 && !processedNumbers.has(cleanNumber) && !phoneChips.some(c => c.number === cleanNumber)) {
+                phoneChips.push({
+                  number: cleanNumber,
+                  dialCode: selectedCountry.dialCode || '',
+                  flag: flagEmoji(selectedCountry.iso2),
+                  name,
+                  vars: { name, phone: cleanNumber }
+                });
+                processedNumbers.add(cleanNumber);
+                addedCount++;
+              }
+            });
+          } else {
+            // Fallback: process all cells as phone numbers (original behavior)
+            rows.forEach(row => {
+              if (Array.isArray(row)) {
+                row.forEach(cell => {
+                  if (cell) {
+                    const cellText = String(cell).trim();
+                    const cleanNumber = cellText.replace(/\D/g, '');
+                    if (cleanNumber.length > 0 && !processedNumbers.has(cleanNumber) && !phoneChips.some(c => c.number === cleanNumber)) {
+                      phoneChips.push({
+                        number: cleanNumber,
+                        dialCode: selectedCountry.dialCode || '',
+                        flag: flagEmoji(selectedCountry.iso2),
+                        name: '',
+                        vars: {}
+                      });
+                      processedNumbers.add(cleanNumber);
+                      addedCount++;
+                    }
+                  }
+                });
               }
             });
           }
-        });
+        }
 
         if (addedCount > 0) {
           renderPhoneChips();
           savePhoneChips();
           updateNumberCount();
-          showMessage(`${addedCount} number(s) imported`, 'success');
+          const withNames = phoneChips.slice(-addedCount).some(c => c.name);
+          const varsList = hasHeaders ? firstRowTexts.filter(h => h && !h.includes('phone') && !h.includes('mobile') && !h.includes('number') && !h.includes('whatsapp')).map(h => `{${h}}`).join(', ') : '';
+          const hint = withNames ? ` — variables available: ${varsList || '{name}'}` : '';
+          showMessage(`${addedCount} contact(s) imported${hint}`, 'success');
         } else {
           showMessage('No new numbers to import', 'warning');
         }
@@ -1572,11 +1736,13 @@ function hideBlockingScreen() {
   blockingScreen.style.display = 'none';
   if (currentView === 'main') {
     mainContent.style.display = 'block';
+    restoreFinalReport();
   }
 }
 
 function initMsgLog(numbers) {
   logQueue      = numbers;
+  logStatuses   = new Array(numbers.length).fill('waiting');
   logProcessed  = 0;
   logPrevSent   = 0;
   logPrevFailed = 0;
@@ -1605,10 +1771,12 @@ function updateMsgLog(sent, failed) {
     if (sent > logPrevSent) {
       badge.className = 'log-badge sent';
       badge.textContent = '✅ Sent';
+      logStatuses[logProcessed] = 'sent';
       logPrevSent++;
     } else if (failed > logPrevFailed) {
       badge.className = 'log-badge failed';
       badge.textContent = '❌ Failed';
+      logStatuses[logProcessed] = 'failed';
       logPrevFailed++;
     }
 
@@ -1618,6 +1786,12 @@ function updateMsgLog(sent, failed) {
 
     logProcessed++;
   }
+}
+
+function getRetryNumbers() {
+  const failed  = logQueue.filter((_, i) => logStatuses[i] === 'failed');
+  const pending = logQueue.slice(logProcessed);
+  return [...failed, ...pending];
 }
 
 function switchTab(tab) {
@@ -1646,6 +1820,7 @@ function showProgress() {
   pauseBtn.style.display = '';
   stopBtn.style.display = '';
   countdownEl.style.display = '';
+  retryBtn.style.display = 'none';
   switchTab('progress');
 }
 
@@ -1664,6 +1839,40 @@ function showMessage(text, type) {
     statusMessage.className = 'status-message';
   }, 5000);
 }
+
+// Retry Failed button
+retryBtn.addEventListener('click', () => {
+  chrome.storage.local.get('finalReport', (data) => {
+    if (!data.finalReport) return;
+    const { retryNumbers, originalMessage, originalDelay, originalRandomize } = data.finalReport;
+    if (!retryNumbers || retryNumbers.length === 0) return;
+
+    chrome.storage.local.remove('finalReport');
+
+    currentMessage   = originalMessage;
+    currentDelaySec  = originalDelay;
+    currentRandomize = originalRandomize;
+
+    const queue = retryNumbers.map(number => ({ number, message: originalMessage, media: null }));
+
+    isRunning = true;
+    isPaused  = false;
+    showProgress();
+    initMsgLog(retryNumbers);
+
+    chrome.runtime.sendMessage({
+      action: 'startQueue',
+      data: { queue, delaySec: originalDelay, randomize: originalRandomize, media: null }
+    }, (response) => {
+      if (response && response.success) {
+        showMessage(`Retry started! ${retryNumbers.length} numbers. Keep WhatsApp Web tab open.`, 'success');
+      } else {
+        isRunning = false;
+        showMessage(response?.error || 'Failed to start retry', 'error');
+      }
+    });
+  });
+});
 
 // ===== Listen for Progress Updates from Background =====
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -1696,6 +1905,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       isRunning = false;
       hideProgress();
       showMessage(`Completed! Sent: ${sent}, Failed: ${failed}`, 'success');
+      const logBody = document.getElementById('msgLogBody');
+      chrome.storage.local.set({ finalReport: {
+        sent, failed, total,
+        progressPercent: Math.round((sent + failed) / total * 100),
+        logHtml: logBody ? logBody.innerHTML : '',
+        retryNumbers: getRetryNumbers(),
+        originalMessage: currentMessage,
+        originalDelay: currentDelaySec,
+        originalRandomize: currentRandomize
+      }});
     }
   }
 
@@ -1703,7 +1922,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     isRunning = false;
     isPaused = false;
     hideProgress();
-    showMessage(`All done! Sent: ${request.data.sent}, Failed: ${request.data.failed}`, 'success');
+    const s = request.data.sent;
+    const f = request.data.failed;
+    showMessage(`All done! Sent: ${s}, Failed: ${f}`, 'success');
+    const logBody = document.getElementById('msgLogBody');
+    chrome.storage.local.set({ finalReport: {
+      sent: s, failed: f, total: s + f,
+      progressPercent: 100,
+      logHtml: logBody ? logBody.innerHTML : '',
+      retryNumbers: getRetryNumbers(),
+      originalMessage: currentMessage,
+      originalDelay: currentDelaySec,
+      originalRandomize: currentRandomize
+    }});
   }
 });
 
