@@ -8,7 +8,22 @@ const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
 
 const app = express();
-app.use(cors());
+
+// ===== CORS Configuration for Chrome Extensions =====
+// Allow all origins including chrome-extension:// URLs
+app.use(cors({
+  origin: function(origin, callback) {
+    // Allow requests from:
+    // 1. Chrome extensions (chrome-extension://...)
+    // 2. Local dev (localhost, 127.0.0.1)
+    // 3. Any origin (needed for extension cross-origin requests)
+    callback(null, true);
+  },
+  credentials: false,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'apikey']
+}));
+
 app.use(express.json());
 
 // Initialize Supabase
@@ -166,8 +181,11 @@ app.post('/api/update-selector', async (req, res) => {
 });
 
 // 5. START SEND - Fetch quota and plan info at start of sending
+app.options('/api/start-send', cors());  // Handle preflight request
 app.post('/api/start-send', async (req, res) => {
   try {
+    console.log('📞 POST /api/start-send called from:', req.headers.origin);
+
     const { authToken } = req.body;
 
     if (!authToken) {
@@ -244,8 +262,11 @@ app.post('/api/start-send', async (req, res) => {
 });
 
 // 6. UPDATE USAGE - Update usage stats after sending stops
+app.options('/api/update-usage', cors());  // Handle preflight request
 app.post('/api/update-usage', async (req, res) => {
   try {
+    console.log('📞 POST /api/update-usage called from:', req.headers.origin);
+
     const { authToken, sentToday, remainingToday, planId } = req.body;
 
     if (!authToken) {
