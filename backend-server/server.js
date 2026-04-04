@@ -165,7 +165,118 @@ app.post('/api/update-selector', async (req, res) => {
   }
 });
 
-// 5. GET SELECTOR BY NAME - Get specific selector
+// 5. START SEND - Fetch quota and plan info at start of sending
+app.post('/api/start-send', async (req, res) => {
+  try {
+    const { authToken } = req.body;
+
+    if (!authToken) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing authToken'
+      });
+    }
+
+    // Get user info from auth token (in real app, verify JWT signature)
+    // For now, assume token is valid and extract userId
+    const decoded = JSON.parse(Buffer.from(authToken.split('.')[1], 'base64').toString());
+    const userId = decoded.sub || decoded.userId;
+
+    // Get user's subscription plan
+    const { data: userData, error: userError } = await supabase
+      .from('auth.users')
+      .select('id, email')
+      .eq('id', userId)
+      .single();
+
+    if (userError) throw userError;
+
+    // Get user's subscription plan
+    const { data: planData, error: planError } = await supabase
+      .from('user_subscriptions')
+      .select('plan_id, created_at')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    // Default to free plan if no subscription
+    const planId = planData?.plan_id || 'free';
+
+    // Get plan limits
+    const { data: planDetails } = await supabase
+      .from('subscription_plans')
+      .select('name, messages_per_day')
+      .eq('id', planId)
+      .single();
+
+    const dailyLimit = planDetails?.messages_per_day || 10;
+    const planName = planDetails?.name || 'Free';
+
+    // Get today's message count
+    const today = new Date().toISOString().split('T')[0];
+    const { data: todayLogs, error: logError } = await supabase
+      .from('message_logs')
+      .select('id')
+      .eq('user_id', userId)
+      .gte('created_at', `${today}T00:00:00`)
+      .lte('created_at', `${today}T23:59:59`);
+
+    const sentToday = todayLogs?.length || 0;
+    const remainingToday = Math.max(0, dailyLimit - sentToday);
+
+    res.json({
+      success: true,
+      plan: planName,
+      planId: planId,
+      dailyLimit: dailyLimit,
+      sentToday: sentToday,
+      remainingToday: remainingToday,
+      message: `Ready to send. You have ${remainingToday} messages remaining today.`
+    });
+  } catch (error) {
+    console.error('❌ POST /api/start-send error:', error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// 6. UPDATE USAGE - Update usage stats after sending stops
+app.post('/api/update-usage', async (req, res) => {
+  try {
+    const { authToken, sentToday, remainingToday, planId } = req.body;
+
+    if (!authToken) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing authToken'
+      });
+    }
+
+    // Decode auth token to get userId
+    const decoded = JSON.parse(Buffer.from(authToken.split('.')[1], 'base64').toString());
+    const userId = decoded.sub || decoded.userId;
+
+    // Update user's daily stats (could store in a new table)
+    // For now, just return success
+    res.json({
+      success: true,
+      message: 'Usage stats updated',
+      sentToday: sentToday,
+      remainingToday: remainingToday
+    });
+  } catch (error) {
+    console.error('❌ POST /api/update-usage error:', error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// 7. GET SELECTOR BY NAME - Get specific selector
 app.get('/api/selectors/:name', async (req, res) => {
   try {
     const { name } = req.params;

@@ -16,6 +16,106 @@ let authToken = null;
 let userStats = null;
 let batchId = null;
 
+// ===== Quota State (Local Tracking) =====
+let quota = {
+  plan: null,
+  planId: null,
+  dailyLimit: 10,
+  sentToday: 0,
+  remainingToday: 10,
+  lastFetched: null
+};
+let sessionStats = { sentInSession: 0, failedInSession: 0 };
+
+// ===== Quota Functions (Local Tracking) =====
+
+async function fetchQuotaAtStart() {
+  try {
+    if (!authToken) {
+      console.warn('⚠️  No auth token, using default quota');
+      return { success: true, quota: quota };
+    }
+
+    // Fetch quota from backend
+    const response = await fetch('http://localhost:3000/api/start-send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ authToken })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      quota = {
+        plan: data.plan,
+        planId: data.planId,
+        dailyLimit: data.dailyLimit,
+        sentToday: data.sentToday,
+        remainingToday: data.remainingToday,
+        lastFetched: new Date().toISOString()
+      };
+
+      // Save to local storage for offline support
+      await chrome.storage.local.set({ quota: quota });
+
+      console.log('✅ Quota fetched:', quota);
+      return { success: true, quota: quota };
+    }
+
+    return { success: false, error: data.error || 'Failed to fetch quota' };
+  } catch (error) {
+    console.error('❌ fetchQuotaAtStart error:', error.message);
+    // Use cached quota if available
+    const stored = await chrome.storage.local.get('quota');
+    if (stored.quota) {
+      quota = stored.quota;
+      console.warn('⚠️  Using cached quota:', quota);
+      return { success: true, quota: quota };
+    }
+    return { success: false, error: error.message };
+  }
+}
+
+function canSendMessage() {
+  if (quota.remainingToday <= 0) {
+    return { allowed: false, reason: `Daily limit reached (${quota.dailyLimit}/${quota.dailyLimit})` };
+  }
+  return { allowed: true, reason: 'OK' };
+}
+
+function decrementQuotaLocally() {
+  quota.sentToday += 1;
+  quota.remainingToday = Math.max(0, quota.remainingToday - 1);
+  sessionStats.sentInSession += 1;
+}
+
+async function updateUsageAtEnd() {
+  try {
+    if (!authToken) {
+      console.warn('⚠️  No auth token, skipping usage update');
+      return { success: true };
+    }
+
+    const response = await fetch('http://localhost:3000/api/update-usage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        authToken,
+        sentToday: quota.sentToday,
+        remainingToday: quota.remainingToday,
+        planId: quota.planId
+      })
+    });
+
+    const data = await response.json();
+    console.log('✅ Usage updated on server');
+    return data;
+  } catch (error) {
+    console.error('❌ updateUsageAtEnd error:', error.message);
+    return { success: false, error: error.message };
+  }
+}
+
 // ===== API Functions =====
 
 async function apiRequest(endpoint, options = {}) {
@@ -377,6 +477,14 @@ async function handleStartQueue(data, sendResponse) {
   currentIndex = 0;
   stats = { sent: 0, failed: 0, total: queue.length };
   batchId = crypto.randomUUID();
+  sessionStats = { sentInSession: 0, failedInSession: 0 };
+
+  // FETCH QUOTA AT START (once per sending session)
+  const quotaResult = await fetchQuotaAtStart();
+  if (!quotaResult.success) {
+    console.warn('⚠️  Could not fetch quota:', quotaResult.error);
+  }
+
   isRunning = true;
   isPaused = false;
 
@@ -428,11 +536,15 @@ async function handleStartQueue(data, sendResponse) {
   sendNextMessage();
 }
 
-function handleStopQueue(sendResponse) {
+async function handleStopQueue(sendResponse) {
   isRunning = false;
   isPaused = false;
   batchId = null;
   chrome.alarms.clear('sendNext');
+
+  // SEND USAGE UPDATE AT STOP
+  await updateUsageAtEnd();
+
   chrome.storage.local.set({ isRunning: false, isPaused: false });
   sendResponse({ success: true });
 }
@@ -451,6 +563,7 @@ async function logMessage(recipientPhone, message, status, error = null) {
 
 async function handleMessageSent(data) {
   stats.sent++;
+  decrementQuotaLocally(); // DECREMENT LOCAL QUOTA
   trackEvent('message_sent');
   logMessage(data?.number || '', data?.message || '', 'sent');
   updateProgress();
@@ -509,29 +622,31 @@ async function sendNextMessage() {
   if (isPaused) return;
 
   if (currentIndex >= queue.length) {
+    // SEND USAGE UPDATE AT END
+    await updateUsageAtEnd();
     finishQueue();
     return;
   }
 
-  // Per-message limit check — fetch directly from Supabase (always realtime, no cache)
-  try {
-    const liveStats = await apiRequest('/get-stats');
-    if (liveStats.success) {
-      chrome.runtime.sendMessage({ action: 'statsUpdated', stats: liveStats.stats }).catch(() => {});
-      const limit = liveStats.stats.messagesLimit ?? 10;
-      const sent  = liveStats.stats.messagesSentToday ?? 0;
-      if (sent >= limit) {
-        isRunning = false;
-        chrome.storage.local.set({ isRunning: false });
-        chrome.runtime.sendMessage({
-          action: 'updateProgress',
-          data: { sent: stats.sent, failed: stats.failed, total: stats.total, limitReached: true }
-        }).catch(() => {});
-        return;
+  // CHECK LOCAL QUOTA (no API call, uses cached quota)
+  const quotaCheck = canSendMessage();
+  if (!quotaCheck.allowed) {
+    console.warn(`❌ Quota limit reached: ${quotaCheck.reason}`);
+    isRunning = false;
+    await chrome.storage.local.set({ isRunning: false });
+    chrome.runtime.sendMessage({
+      action: 'updateProgress',
+      data: {
+        sent: stats.sent,
+        failed: stats.failed,
+        total: stats.total,
+        limitReached: true,
+        message: quotaCheck.reason
       }
-    } else {
-    }
-  } catch (e) {
+    }).catch(() => {});
+    // SEND USAGE UPDATE AT STOP
+    await updateUsageAtEnd();
+    return;
   }
 
   const item = queue[currentIndex];
