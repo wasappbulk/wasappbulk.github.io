@@ -260,11 +260,24 @@ class AdminAPI {
    * Cancel subscription
    */
   async cancelSubscription(subscriptionId) {
-    return this.request('PATCH', `subscriptions?id=eq.${subscriptionId}`, {
+    // Get subscription to find user_id
+    const subs = await this.request('GET', `subscriptions?id=eq.${subscriptionId}`);
+    const sub = subs[0];
+
+    // Cancel subscription
+    await this.request('PATCH', `subscriptions?id=eq.${subscriptionId}`, {
       status: 'cancelled',
       cancelled_at: new Date().toISOString(),
       auto_renew: false,
     });
+
+    // Reset user: cancel status + reset message count
+    if (sub?.user_id) {
+      await this.request('PATCH', `users?id=eq.${sub.user_id}`, {
+        status: 'cancelled',
+        messages_sent_total: 0,
+      });
+    }
   }
 
   /**

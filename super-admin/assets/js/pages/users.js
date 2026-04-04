@@ -174,12 +174,15 @@ async function saveUser(adminAPI) {
   try {
     if (editingUserId) {
       // Update user
+      const user = allUsers.find(u => u.id === editingUserId);
+      const planChanged = plan && plan !== user?.plan;
       const updates = {
         email,
         phone: phone || null,
         status: isActive ? 'active' : 'suspended'
       };
       if (plan) updates.plan = plan;
+      if (planChanged) updates.messages_sent_total = 0;
       await adminAPI.updateUser(editingUserId, updates);
       showUserSuccess('User updated successfully');
     } else {
