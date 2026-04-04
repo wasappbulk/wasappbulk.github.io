@@ -182,7 +182,10 @@ async function saveUser(adminAPI) {
         status: isActive ? 'active' : 'suspended'
       };
       if (plan) updates.plan = plan;
-      if (planChanged) updates.messages_sent_total = 0;
+      if (planChanged) {
+        updates.messages_sent_total = 0;
+        updates.messages_sent_today = 0;
+      }
       await adminAPI.updateUser(editingUserId, updates);
       showUserSuccess('User updated successfully');
     } else {

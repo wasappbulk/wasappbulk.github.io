@@ -271,11 +271,12 @@ class AdminAPI {
       auto_renew: false,
     });
 
-    // Reset user: cancel status + reset message count
+    // Reset user: cancel status + reset message counts
     if (sub?.user_id) {
       await this.request('PATCH', `users?id=eq.${sub.user_id}`, {
         status: 'cancelled',
         messages_sent_total: 0,
+        messages_sent_today: 0,
       });
     }
   }
