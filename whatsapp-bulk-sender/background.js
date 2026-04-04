@@ -36,22 +36,16 @@ async function fetchQuotaAtStart() {
       return { success: true, quota: quota };
     }
 
-    // Fetch quota from backend
-    const response = await fetch('http://localhost:3000/api/start-send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ authToken })
-    });
+    // Fetch quota directly from Supabase Edge Function
+    const data = await apiRequest('/get-stats');
 
-    const data = await response.json();
-
-    if (data.success) {
+    if (data.success && data.stats) {
       quota = {
-        plan: data.plan,
-        planId: data.planId,
-        dailyLimit: data.dailyLimit,
-        sentToday: data.sentToday,
-        remainingToday: data.remainingToday,
+        plan: data.stats.plan,
+        planId: data.stats.plan,
+        dailyLimit: data.stats.messagesLimit,
+        sentToday: data.stats.messagesSentToday,
+        remainingToday: data.stats.messagesRemaining,
         lastFetched: new Date().toISOString()
       };
 
@@ -91,25 +85,14 @@ function decrementQuotaLocally() {
 
 async function updateUsageAtEnd() {
   try {
-    if (!authToken) {
-      console.warn('⚠️  No auth token, skipping usage update');
-      return { success: true };
-    }
-
-    const response = await fetch('http://localhost:3000/api/update-usage', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        authToken,
-        sentToday: quota.sentToday,
-        remainingToday: quota.remainingToday,
-        planId: quota.planId
-      })
+    // Session complete - all messages were already logged via /log-message endpoint
+    // Quota is refreshed on next session start via /get-stats
+    console.log('✅ Sending session complete. Stats:', {
+      sentInSession: sessionStats.sentInSession,
+      failedInSession: sessionStats.failedInSession,
+      remainingToday: quota.remainingToday
     });
-
-    const data = await response.json();
-    console.log('✅ Usage updated on server');
-    return data;
+    return { success: true };
   } catch (error) {
     console.error('❌ updateUsageAtEnd error:', error.message);
     return { success: false, error: error.message };
@@ -553,11 +536,26 @@ async function logMessage(recipientPhone, message, status, error = null) {
   try {
     if (!authToken) await restoreAuth();
     if (!authToken) return;
-    fetch(`${SUPABASE_URL}/functions/v1/log-message`, {
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/log-message`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${authToken}` },
       body: JSON.stringify({ recipient_phone: recipientPhone, message, status, error, batch_id: batchId })
-    }).catch(() => {});
+    });
+
+    if (response.status === 429) {
+      // Daily quota exceeded on server
+      isRunning = false;
+      console.error('❌ Daily quota exceeded. Stopping send.');
+      chrome.runtime.sendMessage({ action: 'quotaExceeded', data: { limit: quota.dailyLimit } }).catch(() => {});
+    } else if (!response.ok) {
+      const data = await response.json();
+      if (data.error?.includes('not active')) {
+        // Subscription cancelled/expired
+        isRunning = false;
+        console.error('❌ Subscription is not active. Stopping send.');
+        chrome.runtime.sendMessage({ action: 'subscriptionInactive' }).catch(() => {});
+      }
+    }
   } catch (e) {}
 }
 
