@@ -64,21 +64,29 @@ serve(async (req) => {
 
     const supabase = getServiceClient();
 
-    // Rate limiting: Check if user can send more messages today
+    // Check subscription status and quota
     const { data: userData, error: userError } = await supabase
       .from('users')
-      .select('messages_sent_today, messages_limit, status')
+      .select('messages_limit, status')
       .eq('id', userId)
       .single();
 
     if (userError || !userData)
       return jsonResponse({ success: false, error: 'User not found' }, 404);
 
-    // Enforce quota and subscription status
     if (userData.status !== 'active')
       return jsonResponse({ success: false, error: 'Subscription is not active' }, 403);
 
-    if (userData.messages_sent_today >= userData.messages_limit)
+    // Calculate today's count live from message_logs (source of truth)
+    const today = new Date().toISOString().split('T')[0];
+    const { count: sentToday } = await supabase
+      .from('message_logs')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('status', 'sent')
+      .gte('sent_at', `${today}T00:00:00.000Z`);
+
+    if ((sentToday ?? 0) >= userData.messages_limit)
       return jsonResponse({
         success: false,
         error: `Daily limit reached (${userData.messages_limit}/day). Resets tomorrow.`,
@@ -101,17 +109,6 @@ serve(async (req) => {
     if (dbError) {
       console.error('log-message DB error:', dbError);
       return jsonResponse({ success: false, error: 'Failed to log message' }, 500);
-    }
-
-    // Increment user's message counter for quota enforcement
-    const { error: incrementError } = await supabase.rpc('increment_message_count', {
-      p_user_id: userId,
-      p_success: status === 'sent'
-    });
-
-    if (incrementError) {
-      console.warn('Failed to increment message count:', incrementError);
-      // Don't fail the request - message is already logged
     }
 
     return jsonResponse({ success: true });

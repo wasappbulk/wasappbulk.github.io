@@ -68,12 +68,27 @@ serve(async (req) => {
 
     const { data: user, error } = await supabase
       .from('users')
-      .select('plan, messages_limit, messages_sent_today, expires_at, company_name')
+      .select('plan, messages_limit, messages_sent_total, expires_at, company_name, status')
       .eq('id', userId)
       .single();
 
     if (error || !user)
       return jsonResponse({ success: false, error: 'User not found' }, 404);
+
+    if (user.status !== 'active')
+      return jsonResponse({ success: false, error: 'Subscription is not active', status: user.status }, 403);
+
+    // Calculate today's sent count live from message_logs (source of truth)
+    const today = new Date().toISOString().split('T')[0];
+    const { count: sentToday } = await supabase
+      .from('message_logs')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('status', 'sent')
+      .gte('sent_at', `${today}T00:00:00.000Z`);
+
+    const messagesSentToday = sentToday ?? 0;
+    const messagesRemaining = Math.max(0, user.messages_limit - messagesSentToday);
 
     const { data: planData } = await supabase
       .from('plans')
@@ -88,8 +103,9 @@ serve(async (req) => {
       stats: {
         plan: user.plan,
         messagesLimit: user.messages_limit,
-        messagesSentToday: user.messages_sent_today,
-        messagesRemaining: user.messages_limit - user.messages_sent_today,
+        messagesSentToday,
+        messagesRemaining,
+        messagesSentTotal: user.messages_sent_total,
         expiresAt: user.expires_at,
         mediaUploadEnabled,
         companyName: user.company_name || '',
