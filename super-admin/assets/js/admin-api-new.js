@@ -107,6 +107,8 @@ class AdminAPI {
         const planRows = await this.request('GET', `plans?id=eq.${updates.plan}&select=messages_limit,price_monthly,price`);
         if (planRows && planRows.length > 0 && planRows[0].messages_limit != null) {
           updates.messages_limit = planRows[0].messages_limit;
+          updates.messages_sent_today = 0;
+          updates.messages_sent_total = 0;
 
           // Cancel any existing active subscription for this user
           await this.request('PATCH', `subscriptions?user_id=eq.${userId}&status=eq.active`, { status: 'cancelled' }).catch(() => {});
@@ -130,7 +132,22 @@ class AdminAPI {
   }
 
   async cancelSubscription(subscriptionId) {
-    return this.request('PATCH', `subscriptions?id=eq.${subscriptionId}`, { status: 'cancelled' });
+    const subs = await this.request('GET', `subscriptions?id=eq.${subscriptionId}&select=user_id`);
+    const sub = subs[0];
+
+    await this.request('PATCH', `subscriptions?id=eq.${subscriptionId}`, {
+      status: 'cancelled',
+      cancelled_at: new Date().toISOString(),
+      auto_renew: false,
+    });
+
+    if (sub?.user_id) {
+      await this.request('PATCH', `users?id=eq.${sub.user_id}`, {
+        status: 'cancelled',
+        messages_sent_today: 0,
+        messages_sent_total: 0,
+      });
+    }
   }
 
   async deleteUser(userId) {
