@@ -71,27 +71,43 @@ async function fetchQuotaAtStart() {
 }
 
 function canSendMessage() {
-  if (quota.remainingToday <= 0) {
-    return { allowed: false, reason: `Daily limit reached (${quota.dailyLimit}/${quota.dailyLimit})` };
+  // Check local session counter against quota fetched at start
+  if (sessionStats.sentInSession >= quota.remainingToday) {
+    return { allowed: false, reason: `Daily limit reached (${quota.dailyLimit}/day)` };
   }
   return { allowed: true, reason: 'OK' };
 }
 
 function decrementQuotaLocally() {
-  quota.sentToday += 1;
-  quota.remainingToday = Math.max(0, quota.remainingToday - 1);
+  // Only increment session counter — quota object is only updated via API at start/stop
   sessionStats.sentInSession += 1;
 }
 
 async function updateUsageAtEnd() {
   try {
-    // Session complete - all messages were already logged via /log-message endpoint
-    // Quota is refreshed on next session start via /get-stats
-    console.log('✅ Sending session complete. Stats:', {
-      sentInSession: sessionStats.sentInSession,
-      failedInSession: sessionStats.failedInSession,
-      remainingToday: quota.remainingToday
-    });
+    if (!authToken) return { success: true };
+
+    // Fetch fresh stats from Supabase after session ends
+    const data = await apiRequest('/get-stats');
+
+    if (data.success && data.stats) {
+      quota = {
+        plan: data.stats.plan,
+        planId: data.stats.plan,
+        dailyLimit: data.stats.messagesLimit,
+        sentToday: data.stats.messagesSentToday,
+        remainingToday: data.stats.messagesRemaining,
+        expiresAt: data.stats.expiresAt,
+        lastFetched: new Date().toISOString()
+      };
+
+      // Update cache with real numbers from DB
+      await chrome.storage.local.set({ quota: quota });
+      console.log('✅ Quota refreshed after session:', quota);
+    }
+
+    // Reset session counter for next session
+    sessionStats = { sentInSession: 0, failedInSession: 0 };
     return { success: true };
   } catch (error) {
     console.error('❌ updateUsageAtEnd error:', error.message);
